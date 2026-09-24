@@ -14,7 +14,117 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      celulas: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          numero: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          numero: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          numero?: number
+        }
+        Relationships: []
+      }
+      modelos: {
+        Row: {
+          ativo: boolean
+          codigo: number
+          created_at: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          ativo?: boolean
+          codigo: number
+          created_at?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: number
+          created_at?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      operadores: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      registros: {
+        Row: {
+          celula: number
+          created_at: string
+          hora_entrada: string
+          hora_saida: string | null
+          id: number
+          modelo: string
+          modelo_codigo: number | null
+          observacoes: string | null
+          operacao: string
+          operador: string
+          status: string
+          turno: string
+        }
+        Insert: {
+          celula: number
+          created_at?: string
+          hora_entrada?: string
+          hora_saida?: string | null
+          id?: number
+          modelo: string
+          modelo_codigo?: number | null
+          observacoes?: string | null
+          operacao: string
+          operador: string
+          status: string
+          turno: string
+        }
+        Update: {
+          celula?: number
+          created_at?: string
+          hora_entrada?: string
+          hora_saida?: string | null
+          id?: number
+          modelo?: string
+          modelo_codigo?: number | null
+          observacoes?: string | null
+          operacao?: string
+          operador?: string
+          status?: string
+          turno?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
