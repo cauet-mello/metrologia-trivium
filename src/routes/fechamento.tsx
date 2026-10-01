@@ -51,10 +51,12 @@ function Lista() {
   const [filtroCelula, setFiltroCelula] = useState("");
   const [filtroOperador, setFiltroOperador] = useState("");
   const [obs, setObs] = useState<Record<number, string>>({});
+  const [atraso, setAtraso] = useState<Record<number, boolean>>({});
   const [erro, setErro] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationFn: async (id: number) => fechar({ data: { id, observacoes: obs[id] ?? "" } }),
+    mutationFn: async (id: number) =>
+      fechar({ data: { id, observacoes: obs[id] ?? "", atraso: atraso[id] === true } }),
     onSuccess: async () => {
       setErro(null);
       await queryClient.invalidateQueries({ queryKey: ["registros"] });
@@ -156,6 +158,22 @@ function Lista() {
                 value={obs[r.id] ?? ""}
                 onChange={(e) => setObs({ ...obs, [r.id]: e.target.value })}
               />
+
+              <label
+                className="mt-4 flex cursor-pointer items-center gap-3 rounded-md border border-border/60 bg-surface-2 p-3 text-sm"
+                htmlFor={`atraso-${r.id}`}
+              >
+                <input
+                  id={`atraso-${r.id}`}
+                  type="checkbox"
+                  className="size-4 accent-[var(--accent)]"
+                  checked={atraso[r.id] === true}
+                  onChange={(e) => setAtraso({ ...atraso, [r.id]: e.target.checked })}
+                />
+                <span>
+                  <strong>Atraso</strong> — ferrolho inserido fora do horário de medição
+                </span>
+              </label>
 
               <button
                 className="btn-base btn-primary mt-4 w-full"

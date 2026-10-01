@@ -8,6 +8,13 @@
       "when": 1790253939889,
       "tag": "0000_create_ferrolhos_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790871414518,
+      "tag": "0001_add_atraso_registros",
+      "breakpoints": true
     }
   ]
 }

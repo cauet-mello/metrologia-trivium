@@ -52,15 +52,12 @@ export const sairInspetor = createServerFn({ method: "POST" }).handler(async () 
 });
 
 export const fecharRegistro = createServerFn({ method: "POST" })
-  .inputValidator((data: { id: number; observacoes?: string }) => data)
-  .handler(async ({ data }) => {
-    await exigirInspetor();
-    const db = await admin();
-    const { error } = await db
-      .from("registros")
+  .inputValidator((data: { id: number; observacoes?: string; atraso?: boolean }) => data)
+...
       .update({
         hora_saida: new Date().toISOString(),
         observacoes: data.observacoes?.trim() || null,
+        atraso: data.atraso === true,
       })
       .eq("id", data.id)
       .is("hora_saida", null);
