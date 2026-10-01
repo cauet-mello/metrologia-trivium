@@ -17,13 +17,14 @@ export function exportarPlanilha(registros: Registro[]) {
     HORA_ENTRADA: formatarHora(r.hora_entrada),
     HORA_SAIDA: formatarHora(r.hora_saida),
     PERMANENCIA: r.hora_saida ? formatarDuracao(r.hora_entrada, r.hora_saida) : "EM MEDIÇÃO",
+    ATRASO: r.atraso ? "SIM" : "",
     OBSERVACOES: r.observacoes ?? "",
   }));
 
   const sheet = XLSX.utils.json_to_sheet(linhas);
   sheet["!cols"] = [
     { wch: 6 }, { wch: 10 }, { wch: 44 }, { wch: 7 }, { wch: 14 }, { wch: 8 },
-    { wch: 32 }, { wch: 12 }, { wch: 12 }, { wch: 13 }, { wch: 13 }, { wch: 14 }, { wch: 40 },
+    { wch: 32 }, { wch: 12 }, { wch: 12 }, { wch: 13 }, { wch: 13 }, { wch: 14 }, { wch: 8 }, { wch: 40 },
   ];
 
   const book = XLSX.utils.book_new();

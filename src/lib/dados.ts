@@ -12,6 +12,7 @@ export type Registro = {
   hora_entrada: string;
   hora_saida: string | null;
   observacoes: string | null;
+  atraso: boolean;
 };
 
 export const operadoresQuery = {
