@@ -107,6 +107,7 @@ function Painel() {
                     <td>{formatarData(r.hora_entrada)} {formatarHora(r.hora_entrada)}</td>
                     <td>{r.hora_saida ? formatarHora(r.hora_saida) : <span className="chip">Aberto</span>}</td>
                     <td>{formatarDuracao(r.hora_entrada, r.hora_saida)}</td>
+                    <td>{r.atraso && <span className="chip border-destructive/50 text-destructive">Atraso</span>}</td>
                   </tr>
                 ))}
               </tbody>
