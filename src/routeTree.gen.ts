@@ -10,11 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CadastrosRouteImport } from './routes/cadastros'
 import { Route as FechamentoRouteImport } from './routes/fechamento'
+import { Route as FilaRouteImport } from './routes/fila'
+import { Route as PainelRouteImport } from './routes/painel'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastrosRoute = CadastrosRouteImport.update({
+  id: '/cadastros',
+  path: '/cadastros',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FechamentoRoute = FechamentoRouteImport.update({
@@ -22,31 +30,53 @@ const FechamentoRoute = FechamentoRouteImport.update({
   path: '/fechamento',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FilaRoute = FilaRouteImport.update({
+  id: '/fila',
+  path: '/fila',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PainelRoute = PainelRouteImport.update({
+  id: '/painel',
+  path: '/painel',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cadastros': typeof CadastrosRoute
   '/fechamento': typeof FechamentoRoute
+  '/fila': typeof FilaRoute
+  '/painel': typeof PainelRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cadastros': typeof CadastrosRoute
   '/fechamento': typeof FechamentoRoute
+  '/fila': typeof FilaRoute
+  '/painel': typeof PainelRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cadastros': typeof CadastrosRoute
   '/fechamento': typeof FechamentoRoute
+  '/fila': typeof FilaRoute
+  '/painel': typeof PainelRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/fechamento'
+  fullPaths: '/' | '/cadastros' | '/fechamento' | '/fila' | '/painel'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/fechamento'
-  id: '__root__' | '/' | '/fechamento'
+  to: '/' | '/cadastros' | '/fechamento' | '/fila' | '/painel'
+  id: '__root__' | '/' | '/cadastros' | '/fechamento' | '/fila' | '/painel'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CadastrosRoute: typeof CadastrosRoute
   FechamentoRoute: typeof FechamentoRoute
+  FilaRoute: typeof FilaRoute
+  PainelRoute: typeof PainelRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +88,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cadastros': {
+      id: '/cadastros'
+      path: '/cadastros'
+      fullPath: '/cadastros'
+      preLoaderRoute: typeof CadastrosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fechamento': {
       id: '/fechamento'
       path: '/fechamento'
@@ -65,12 +102,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FechamentoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fila': {
+      id: '/fila'
+      path: '/fila'
+      fullPath: '/fila'
+      preLoaderRoute: typeof FilaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/painel': {
+      id: '/painel'
+      path: '/painel'
+      fullPath: '/painel'
+      preLoaderRoute: typeof PainelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CadastrosRoute: CadastrosRoute,
   FechamentoRoute: FechamentoRoute,
+  FilaRoute: FilaRoute,
+  PainelRoute: PainelRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
