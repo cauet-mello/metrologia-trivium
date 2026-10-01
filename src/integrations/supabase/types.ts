@@ -82,6 +82,7 @@ export type Database = {
       }
       registros: {
         Row: {
+          atraso: boolean
           celula: number
           created_at: string
           hora_entrada: string
@@ -96,6 +97,7 @@ export type Database = {
           turno: string
         }
         Insert: {
+          atraso?: boolean
           celula: number
           created_at?: string
           hora_entrada?: string
@@ -110,6 +112,7 @@ export type Database = {
           turno: string
         }
         Update: {
+          atraso?: boolean
           celula?: number
           created_at?: string
           hora_entrada?: string
