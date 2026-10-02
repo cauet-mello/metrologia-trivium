@@ -50,9 +50,9 @@ export function AppShell({
             </span>
             <div className="leading-tight">
               <p className="font-display text-[0.68rem] font-semibold tracking-[0.2em] text-accent uppercase">
-                Qualidade
+                SISTEMA DE QUALIDADE
               </p>
-              <p className="font-display text-base font-bold">Controle de Ferrolhos · Zeiss</p>
+              <p className="font-display text-base font-bold">Controle Tridimensional · Zeiss</p>
             </div>
           </div>
           <nav className="flex flex-wrap gap-1">
