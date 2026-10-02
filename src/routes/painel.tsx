@@ -113,6 +113,7 @@ function Painel() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </section>
       </div>
