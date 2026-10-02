@@ -86,12 +86,13 @@ function Painel() {
           </ul>
         </section>
 
-        <section className="panel overflow-x-auto p-5 lg:col-span-2">
+        <section className="panel p-5 lg:col-span-2">
           <h2 className="font-display text-lg font-bold">Registros do Dia</h2>
           {isPending ? (
             <p className="mt-4 text-sm text-muted-foreground">Carregando…</p>
           ) : (
-            <table className="mt-4 w-full text-left text-sm">
+            <div className="mt-4 max-h-72 overflow-y-auto pr-1">
+            <table className="w-full text-left text-sm">
               <thead className="text-xs uppercase text-muted-foreground">
                 <tr>
                   <th className="py-2">Modelo</th><th>Cél.</th><th>Operador</th><th>Operação</th><th>Entrada</th><th>Saída</th><th>Permanência</th>
@@ -112,6 +113,7 @@ function Painel() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </section>
       </div>
