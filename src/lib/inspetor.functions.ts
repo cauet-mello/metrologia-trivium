@@ -9,7 +9,7 @@ function sessionConfig() {
     password: process.env["SESSION_SECRET"]!,
     name: "trivium-inspetor",
     maxAge: 60 * 60 * 12,
-    cookie: { httpOnly: true, secure: true, sameSite: "lax" as const, path: "/" },
+    cookie: { httpOnly: true, secure: true, sameSite: "none" as const, path: "/", partitioned: true },
   };
 }
 
