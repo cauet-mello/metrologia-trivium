@@ -91,7 +91,7 @@ function Lancamento() {
 
   return (
     <AppShell
-      titulo="Lançamento de entrada"
+      titulo="Lançamento de Entrada"
       descricao="Preencha os dados do ferrolho entregue para medição. Tudo fica registrado na base e vai para a planilha."
     >
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">

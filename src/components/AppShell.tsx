@@ -89,7 +89,7 @@ export function AppShell({
 
       <footer className="mx-auto flex max-w-7xl items-center gap-3 px-5 pb-8 text-xs text-muted-foreground">
         <img src={logo.url} alt="Trivium" className="h-5 object-contain opacity-70" />
-        <span>Setor de Qualidade · Medição tridimensional</span>
+        <span>Setor de Qualidade · Medição Tridimensional</span>
       </footer>
     </div>
   );
