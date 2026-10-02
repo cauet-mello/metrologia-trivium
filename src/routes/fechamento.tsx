@@ -31,7 +31,7 @@ export const Route = createFileRoute("/fechamento")({
 function Fechamento() {
   return (
     <AppShell
-      titulo="Fechamento de medição"
+      titulo="Fechamento de Medição"
       descricao="Selecione o ferrolho medido, registre as observações e encerre o atendimento."
     >
       <PortaoInspetor>
