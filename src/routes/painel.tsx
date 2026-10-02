@@ -48,7 +48,7 @@ function Painel() {
 
   return (
     <AppShell
-      titulo="Painel de indicadores"
+      titulo="Painel de Indicadores"
       descricao="Acompanhe o volume de medições e baixe a planilha atualizada."
       acao={
         <div className="flex flex-wrap gap-2">
@@ -71,7 +71,7 @@ function Painel() {
 
       <div className="mt-5 grid gap-5 lg:grid-cols-3">
         <section className="panel p-5">
-          <h2 className="font-display text-lg font-bold">Lançamentos por célula</h2>
+          <h2 className="font-display text-lg font-bold">Lançamentos por Célula</h2>
           {porCelula.length === 0 && <p className="mt-4 text-sm text-muted-foreground">Sem lançamentos neste dia.</p>}
           <ul className="mt-4 space-y-2">
             {porCelula.map(([cel, n]) => (
@@ -87,7 +87,7 @@ function Painel() {
         </section>
 
         <section className="panel overflow-x-auto p-5 lg:col-span-2">
-          <h2 className="font-display text-lg font-bold">Registros do dia</h2>
+          <h2 className="font-display text-lg font-bold">Registros do Dia</h2>
           {isPending ? (
             <p className="mt-4 text-sm text-muted-foreground">Carregando…</p>
           ) : (
