@@ -30,8 +30,8 @@ function Fila() {
 
   return (
     <AppShell
-      titulo="Fila da tridimensional"
-      descricao="Atualização automática — ideal para deixar aberta em uma TV do setor."
+      titulo="Fila da Zeiss"
+      descricao="Atualização automática "
       acao={<span className="chip">{data.length} aguardando</span>}
     >
       {isPending ? (
