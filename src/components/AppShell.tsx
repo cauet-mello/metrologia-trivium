@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo-trivium-lt.png.asset.json";
-import marca from "@/assets/marca-trivium.png.asset.json";
+import logoWordmark from "@/assets/logo-trivium-lt-2.png.asset.json";
 
 const NAV = [
   { to: "/", label: "Lançamento" },
@@ -44,12 +44,16 @@ export function AppShell({
     <div className="min-h-screen">
       <header className="border-b border-border/70 bg-surface/70 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-5 py-4">
-          <img src={marca.url} alt="" className="h-9 w-9 object-contain" />
-          <div className="mr-auto leading-tight">
-            <p className="font-display text-[0.68rem] font-semibold tracking-[0.2em] text-accent uppercase">
-              Trivium · Qualidade
-            </p>
-            <p className="font-display text-base font-bold">Controle de Ferrolhos · Zeiss</p>
+          <div className="mr-auto flex items-center gap-3">
+            <span className="flex items-center rounded-md bg-white px-3 py-1.5">
+              <img src={logoWordmark.url} alt="Trivium" className="h-6 w-auto object-contain" />
+            </span>
+            <div className="leading-tight">
+              <p className="font-display text-[0.68rem] font-semibold tracking-[0.2em] text-accent uppercase">
+                Qualidade
+              </p>
+              <p className="font-display text-base font-bold">Controle de Ferrolhos · Zeiss</p>
+            </div>
           </div>
           <nav className="flex flex-wrap gap-1">
             {NAV.map((item) => {
