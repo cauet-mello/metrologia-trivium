@@ -153,7 +153,7 @@ function SaidaEditavel({ r, onErro }: { r: Registro; onErro: (m: string | null) 
     if (!valor || valor === atual || !r.hora_saida) return;
     const [h, m] = valor.split(":").map(Number);
     const d = new Date(r.hora_saida);
-    d.setHours(h, m, 0, 0);
+    d.setHours(h ?? 0, m ?? 0, 0, 0);
     try {
       await salvar({ data: { id: r.id, hora_saida: d.toISOString() } });
       onErro(null);
