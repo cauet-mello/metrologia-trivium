@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { historicoQuery } from "@/lib/dados";
+import { historicoQuery, type Registro } from "@/lib/dados";
+import { alterarSaida } from "@/lib/inspetor.functions";
 import { duracaoMinutos, formatarData, formatarDuracao, formatarHora } from "@/lib/constantes";
 import { exportarPlanilha } from "@/lib/exportar";
 
@@ -26,15 +28,29 @@ function hojeISO() {
 }
 
 function Painel() {
-  const { data = [], isPending } = useQuery(historicoQuery);
+  const { data = [], isPending } = useQuery({ ...historicoQuery, refetchInterval: 60000 });
   const [dia, setDia] = useState(hojeISO());
+  const [erroSaida, setErroSaida] = useState<string | null>(null);
+
+  // Virada do dia: à meia-noite o painel passa automaticamente para o novo dia.
+  const ultimoHoje = useRef(hojeISO());
+  useEffect(() => {
+    const t = setInterval(() => {
+      const agora = hojeISO();
+      if (agora !== ultimoHoje.current) {
+        setDia((atual) => (atual === ultimoHoje.current ? agora : atual));
+        ultimoHoje.current = agora;
+      }
+    }, 30000);
+    return () => clearInterval(t);
+  }, []);
 
   const doDia = useMemo(
     () => data.filter((r) => new Date(r.hora_entrada).toLocaleDateString("sv-SE") === dia),
     [data, dia],
   );
   const fechados = doDia.filter((r) => r.hora_saida);
-  const abertos = data.filter((r) => !r.hora_saida);
+  const abertos = doDia.filter((r) => !r.hora_saida);
   const media = fechados.length
     ? Math.round(fechados.reduce((s, r) => s + duracaoMinutos(r.hora_entrada, r.hora_saida), 0) / fechados.length)
     : 0;
