@@ -1,6 +1,11 @@
-export const OPERACOES = ["OP40", "OP50", "OP60", "OP70", "DESBASTE", "GRAVAÇÃO"] as const;
+export const OPERACOES = ["OP40", "OP50", "OP60", "OP70", "DESBASTE", "GRAVAÇÃO", "BROCHA"] as const;
 export const TURNOS = ["1", "2", "3"] as const;
-export const STATUS_OPCOES = ["Rota", "Sequência", "Prioridade", "Setup"] as const;
+export const STATUS_OPCOES = ["Rota", "Sequência", "Prioridade", "Setup", "Frequência"] as const;
+
+/** Prioridade vai para a Zeiss 2; demais status para a Zeiss 1. */
+export function filaZeiss(status: string): "Zeiss 1" | "Zeiss 2" {
+  return status === "Prioridade" ? "Zeiss 2" : "Zeiss 1";
+}
 
 export function formatarHora(iso: string | null): string {
   if (!iso) return "—";

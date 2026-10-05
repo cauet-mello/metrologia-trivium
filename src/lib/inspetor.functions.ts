@@ -69,6 +69,29 @@ export const fecharRegistro = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
+export const alterarSaida = createServerFn({ method: "POST" })
+  .inputValidator((data: { id: number; hora_saida: string }) => data)
+  .handler(async ({ data }) => {
+    await exigirInspetor();
+    const nova = new Date(data.hora_saida);
+    if (Number.isNaN(nova.getTime())) throw new Error("Horário inválido.");
+    const db = await admin();
+    const { data: reg, error: e1 } = await db
+      .from("registros")
+      .select("hora_entrada")
+      .eq("id", data.id)
+      .single();
+    if (e1) throw new Error(e1.message);
+    if (nova.getTime() < new Date(reg.hora_entrada).getTime())
+      throw new Error("A saída não pode ser antes da entrada.");
+    const { error } = await db
+      .from("registros")
+      .update({ hora_saida: nova.toISOString() })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
 export const salvarOperador = createServerFn({ method: "POST" })
   .inputValidator((data: { nome: string }) => data)
   .handler(async ({ data }) => {

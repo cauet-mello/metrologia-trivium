@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { historicoQuery } from "@/lib/dados";
+import { historicoQuery, type Registro } from "@/lib/dados";
+import { alterarSaida } from "@/lib/inspetor.functions";
 import { duracaoMinutos, formatarData, formatarDuracao, formatarHora } from "@/lib/constantes";
 import { exportarPlanilha } from "@/lib/exportar";
 
@@ -26,15 +28,29 @@ function hojeISO() {
 }
 
 function Painel() {
-  const { data = [], isPending } = useQuery(historicoQuery);
+  const { data = [], isPending } = useQuery({ ...historicoQuery, refetchInterval: 60000 });
   const [dia, setDia] = useState(hojeISO());
+  const [erroSaida, setErroSaida] = useState<string | null>(null);
+
+  // Virada do dia: à meia-noite o painel passa automaticamente para o novo dia.
+  const ultimoHoje = useRef(hojeISO());
+  useEffect(() => {
+    const t = setInterval(() => {
+      const agora = hojeISO();
+      if (agora !== ultimoHoje.current) {
+        setDia((atual) => (atual === ultimoHoje.current ? agora : atual));
+        ultimoHoje.current = agora;
+      }
+    }, 30000);
+    return () => clearInterval(t);
+  }, []);
 
   const doDia = useMemo(
     () => data.filter((r) => new Date(r.hora_entrada).toLocaleDateString("sv-SE") === dia),
     [data, dia],
   );
   const fechados = doDia.filter((r) => r.hora_saida);
-  const abertos = data.filter((r) => !r.hora_saida);
+  const abertos = doDia.filter((r) => !r.hora_saida);
   const media = fechados.length
     ? Math.round(fechados.reduce((s, r) => s + duracaoMinutos(r.hora_entrada, r.hora_saida), 0) / fechados.length)
     : 0;
@@ -88,6 +104,11 @@ function Painel() {
 
         <section className="panel p-5 lg:col-span-2">
           <h2 className="font-display text-lg font-bold">Registros do Dia</h2>
+          {erroSaida && (
+            <p className="mt-3 rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+              {erroSaida}
+            </p>
+          )}
           {isPending ? (
             <p className="mt-4 text-sm text-muted-foreground">Carregando…</p>
           ) : (
@@ -106,7 +127,7 @@ function Painel() {
                     <td>{r.operador}</td>
                     <td>{r.operacao}</td>
                     <td>{formatarData(r.hora_entrada)} {formatarHora(r.hora_entrada)}</td>
-                    <td>{r.hora_saida ? formatarHora(r.hora_saida) : <span className="chip">Aberto</span>}</td>
+                    <td>{r.hora_saida ? <SaidaEditavel r={r} onErro={setErroSaida} /> : <span className="chip">Aberto</span>}</td>
                     <td>{formatarDuracao(r.hora_entrada, r.hora_saida)}</td>
                     <td>{r.atraso && <span className="chip border-destructive/50 text-destructive">Atraso</span>}</td>
                   </tr>
@@ -118,6 +139,41 @@ function Painel() {
         </section>
       </div>
     </AppShell>
+  );
+}
+
+function SaidaEditavel({ r, onErro }: { r: Registro; onErro: (m: string | null) => void }) {
+  const queryClient = useQueryClient();
+  const salvar = useServerFn(alterarSaida);
+  const atual = formatarHora(r.hora_saida);
+  const [valor, setValor] = useState(atual);
+  useEffect(() => setValor(atual), [atual]);
+
+  async function confirmar() {
+    if (!valor || valor === atual || !r.hora_saida) return;
+    const [h, m] = valor.split(":").map(Number);
+    const d = new Date(r.hora_saida);
+    d.setHours(h ?? 0, m ?? 0, 0, 0);
+    try {
+      await salvar({ data: { id: r.id, hora_saida: d.toISOString() } });
+      onErro(null);
+      await queryClient.invalidateQueries({ queryKey: ["registros"] });
+    } catch (e) {
+      onErro(e instanceof Error ? e.message : "Não foi possível alterar a saída.");
+      setValor(atual);
+    }
+  }
+
+  return (
+    <input
+      type="time"
+      aria-label={`Horário de saída do registro ${r.id}`}
+      className="control w-28 px-2 py-1"
+      value={valor}
+      onChange={(e) => setValor(e.target.value)}
+      onBlur={confirmar}
+      onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+    />
   );
 }
 

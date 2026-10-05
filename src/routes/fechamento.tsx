@@ -7,7 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { BotaoSairInspetor, PortaoInspetor } from "@/components/PortaoInspetor";
 import { abertosQuery, celulasQuery, operadoresQuery } from "@/lib/dados";
 import { fecharRegistro } from "@/lib/inspetor.functions";
-import { formatarDuracao, formatarHora } from "@/lib/constantes";
+import { STATUS_OPCOES, filaZeiss, formatarDuracao, formatarHora } from "@/lib/constantes";
 
 export const Route = createFileRoute("/fechamento")({
   head: () => ({
@@ -50,6 +50,7 @@ function Lista() {
 
   const [filtroCelula, setFiltroCelula] = useState("");
   const [filtroOperador, setFiltroOperador] = useState("");
+  const [filtroStatus, setFiltroStatus] = useState("");
   const [obs, setObs] = useState<Record<number, string>>({});
   const [atraso, setAtraso] = useState<Record<number, boolean>>({});
   const [erro, setErro] = useState<string | null>(null);
@@ -67,8 +68,14 @@ function Lista() {
   const lista = (abertos.data ?? []).filter(
     (r) =>
       (!filtroCelula || String(r.celula) === filtroCelula) &&
-      (!filtroOperador || r.operador === filtroOperador),
+      (!filtroOperador || r.operador === filtroOperador) &&
+      (!filtroStatus || r.status === filtroStatus),
   );
+
+  const filas = (["Zeiss 1", "Zeiss 2"] as const).map((nome) => ({
+    nome,
+    itens: lista.filter((r) => filaZeiss(r.status) === nome),
+  }));
 
   return (
     <div className="space-y-6">
@@ -109,6 +116,24 @@ function Lista() {
             ))}
           </select>
         </div>
+        <div className="min-w-44">
+          <label className="field-label" htmlFor="f-status">
+            Filtrar por status
+          </label>
+          <select
+            id="f-status"
+            className="control"
+            value={filtroStatus}
+            onChange={(e) => setFiltroStatus(e.target.value)}
+          >
+            <option value="">Todos</option>
+            {STATUS_OPCOES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="ml-auto">
           <BotaoSairInspetor />
         </div>
@@ -120,13 +145,24 @@ function Lista() {
         </p>
       )}
 
-      {lista.length === 0 ? (
-        <div className="panel p-10 text-center text-sm text-muted-foreground">
-          Nenhum ferrolho em aberto com esses filtros.
-        </div>
-      ) : (
-        <div className="grid gap-4 xl:grid-cols-2">
-          {lista.map((r) => (
+      <div className="grid gap-6 xl:grid-cols-2">
+        {filas.map((fila) => (
+          <section key={fila.nome} className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-lg font-bold">
+                Fila {fila.nome}
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  {fila.nome === "Zeiss 2" ? "Prioridade" : "Demais status"}
+                </span>
+              </h2>
+              <span className="chip">{fila.itens.length} em aberto</span>
+            </div>
+            {fila.itens.length === 0 ? (
+              <div className="panel p-8 text-center text-sm text-muted-foreground">
+                Nenhum ferrolho em aberto nesta fila.
+              </div>
+            ) : (
+              fila.itens.map((r) => (
             <article key={r.id} className="panel p-6">
               <div className="flex flex-wrap items-start gap-3">
                 <div className="mr-auto">
@@ -183,9 +219,11 @@ function Lista() {
                 Fechar registro
               </button>
             </article>
-          ))}
-        </div>
-      )}
+              ))
+            )}
+          </section>
+        ))}
+      </div>
     </div>
   );
 }
