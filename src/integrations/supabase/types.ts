@@ -85,6 +85,7 @@ export type Database = {
           atraso: boolean
           celula: number
           created_at: string
+          fila: string | null
           hora_entrada: string
           hora_saida: string | null
           id: number
@@ -100,6 +101,7 @@ export type Database = {
           atraso?: boolean
           celula: number
           created_at?: string
+          fila?: string | null
           hora_entrada?: string
           hora_saida?: string | null
           id?: number
@@ -115,6 +117,7 @@ export type Database = {
           atraso?: boolean
           celula?: number
           created_at?: string
+          fila?: string | null
           hora_entrada?: string
           hora_saida?: string | null
           id?: number

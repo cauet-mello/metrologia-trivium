@@ -15,6 +15,13 @@
       "when": 1790871414518,
       "tag": "0001_add_atraso_registros",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791203204019,
+      "tag": "0002_add_fila_registros",
+      "breakpoints": true
     }
   ]
 }
