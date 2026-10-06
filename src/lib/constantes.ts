@@ -2,8 +2,9 @@ export const OPERACOES = ["OP40", "OP50", "OP60", "OP70", "DESBASTE", "GRAVAÇÃ
 export const TURNOS = ["1", "2", "3"] as const;
 export const STATUS_OPCOES = ["Rota", "Sequência", "Prioridade", "Setup", "Frequência"] as const;
 
-/** Prioridade vai para a Zeiss 2; demais status para a Zeiss 1. */
-export function filaZeiss(status: string): "Zeiss 1" | "Zeiss 2" {
+/** Escolha manual do inspetor prevalece; senão Prioridade → Zeiss 2, demais → Zeiss 1. */
+export function filaZeiss(status: string, fila?: string | null): "Zeiss 1" | "Zeiss 2" {
+  if (fila === "Zeiss 1" || fila === "Zeiss 2") return fila;
   return status === "Prioridade" ? "Zeiss 2" : "Zeiss 1";
 }
 
