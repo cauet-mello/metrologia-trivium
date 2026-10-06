@@ -6,7 +6,7 @@ import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { BotaoSairInspetor, PortaoInspetor } from "@/components/PortaoInspetor";
 import { abertosQuery, celulasQuery, operadoresQuery } from "@/lib/dados";
-import { fecharRegistro } from "@/lib/inspetor.functions";
+import { fecharRegistro, moverFila } from "@/lib/inspetor.functions";
 import { STATUS_OPCOES, filaZeiss, formatarDuracao, formatarHora } from "@/lib/constantes";
 
 export const Route = createFileRoute("/fechamento")({
@@ -54,6 +54,16 @@ function Lista() {
   const [obs, setObs] = useState<Record<number, string>>({});
   const [atraso, setAtraso] = useState<Record<number, boolean>>({});
   const [erro, setErro] = useState<string | null>(null);
+  const [alvo, setAlvo] = useState<"Zeiss 1" | "Zeiss 2" | null>(null);
+  const moverFn = useServerFn(moverFila);
+  const mover = useMutation({
+    mutationFn: async (v: { id: number; fila: "Zeiss 1" | "Zeiss 2" }) => moverFn({ data: v }),
+    onSuccess: async () => {
+      setErro(null);
+      await queryClient.invalidateQueries({ queryKey: ["registros"] });
+    },
+    onError: (e: Error) => setErro(e.message),
+  });
 
   const mutation = useMutation({
     mutationFn: async (id: number) =>
@@ -74,7 +84,7 @@ function Lista() {
 
   const filas = (["Zeiss 1", "Zeiss 2"] as const).map((nome) => ({
     nome,
-    itens: lista.filter((r) => filaZeiss(r.status) === nome),
+    itens: lista.filter((r) => filaZeiss(r.status, r.fila) === nome),
   }));
 
   return (
@@ -145,9 +155,29 @@ function Lista() {
         </p>
       )}
 
+      <p className="text-sm text-muted-foreground">
+        Dica: arraste um ferrolho para a outra fila, ou use o botão "Mover" do cartão.
+      </p>
       <div className="grid gap-6 xl:grid-cols-2">
         {filas.map((fila) => (
-          <section key={fila.nome} className="space-y-4">
+          <section
+            key={fila.nome}
+            className={`space-y-4 rounded-lg p-2 transition-colors ${alvo === fila.nome ? "bg-accent/10 outline-2 outline-dashed outline-accent" : ""}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              if (alvo !== fila.nome) setAlvo(fila.nome);
+            }}
+            onDragLeave={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) setAlvo(null);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              setAlvo(null);
+              const id = Number(e.dataTransfer.getData("text/plain"));
+              const r = lista.find((x) => x.id === id);
+              if (r && filaZeiss(r.status, r.fila) !== fila.nome) mover.mutate({ id, fila: fila.nome });
+            }}
+          >
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-bold">
                 Fila {fila.nome}
@@ -163,7 +193,27 @@ function Lista() {
               </div>
             ) : (
               fila.itens.map((r) => (
-            <article key={r.id} className="panel p-6">
+            <article
+              key={r.id}
+              className="panel cursor-grab p-6 active:cursor-grabbing"
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData("text/plain", String(r.id));
+                e.dataTransfer.effectAllowed = "move";
+              }}
+            >
+              <div className="mb-3 flex justify-end">
+                <button
+                  type="button"
+                  className="btn-base btn-ghost px-3 py-1 text-xs"
+                  disabled={mover.isPending}
+                  onClick={() =>
+                    mover.mutate({ id: r.id, fila: fila.nome === "Zeiss 1" ? "Zeiss 2" : "Zeiss 1" })
+                  }
+                >
+                  Mover para {fila.nome === "Zeiss 1" ? "Zeiss 2" : "Zeiss 1"} →
+                </button>
+              </div>
               <div className="flex flex-wrap items-start gap-3">
                 <div className="mr-auto">
                   <span className="chip">#{r.id}</span>

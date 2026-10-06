@@ -69,6 +69,19 @@ export const fecharRegistro = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
+export const moverFila = createServerFn({ method: "POST" })
+  .inputValidator((data: { id: number; fila: "Zeiss 1" | "Zeiss 2" }) => {
+    if (data.fila !== "Zeiss 1" && data.fila !== "Zeiss 2") throw new Error("Fila inválida.");
+    return data;
+  })
+  .handler(async ({ data }) => {
+    await exigirInspetor();
+    const db = await admin();
+    const { error } = await db.from("registros").update({ fila: data.fila }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
 export const alterarSaida = createServerFn({ method: "POST" })
   .inputValidator((data: { id: number; hora_saida: string }) => data)
   .handler(async ({ data }) => {
