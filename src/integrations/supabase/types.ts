@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      alteracoes: {
+        Row: {
+          anterior: string | null
+          created_at: string
+          id: number
+          inspetor: string
+          novo: string | null
+          perfil: string
+          registro_id: number | null
+          tipo: string
+        }
+        Insert: {
+          anterior?: string | null
+          created_at?: string
+          id?: number
+          inspetor: string
+          novo?: string | null
+          perfil?: string
+          registro_id?: number | null
+          tipo: string
+        }
+        Update: {
+          anterior?: string | null
+          created_at?: string
+          id?: number
+          inspetor?: string
+          novo?: string | null
+          perfil?: string
+          registro_id?: number | null
+          tipo?: string
+        }
+        Relationships: []
+      }
       celulas: {
         Row: {
           ativo: boolean
@@ -35,6 +68,72 @@ export type Database = {
         }
         Relationships: []
       }
+      configuracoes: {
+        Row: {
+          chave: string
+          valor: string | null
+        }
+        Insert: {
+          chave: string
+          valor?: string | null
+        }
+        Update: {
+          chave?: string
+          valor?: string | null
+        }
+        Relationships: []
+      }
+      escala_horarios: {
+        Row: {
+          celulas: number[]
+          escala: string
+          fim: string
+          id: string
+          inicio: string
+          turno: string
+        }
+        Insert: {
+          celulas?: number[]
+          escala: string
+          fim: string
+          id?: string
+          inicio: string
+          turno: string
+        }
+        Update: {
+          celulas?: number[]
+          escala?: string
+          fim?: string
+          id?: string
+          inicio?: string
+          turno?: string
+        }
+        Relationships: []
+      }
+      inspetores: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+          senha_hash: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          senha_hash: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          senha_hash?: string
+        }
+        Relationships: []
+      }
       modelos: {
         Row: {
           ativo: boolean
@@ -53,6 +152,24 @@ export type Database = {
         Update: {
           ativo?: boolean
           codigo?: number
+          created_at?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      operacoes: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+        }
+        Update: {
           created_at?: string
           id?: string
           nome?: string
@@ -128,6 +245,42 @@ export type Database = {
           operador?: string
           status?: string
           turno?: string
+        }
+        Relationships: []
+      }
+      status_opcoes: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      turnos: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
         }
         Relationships: []
       }
