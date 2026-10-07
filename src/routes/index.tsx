@@ -9,8 +9,11 @@ import {
   lancarRegistro,
   modelosQuery,
   operadoresQuery,
+  operacoesQuery,
+  statusQuery,
+  turnosQuery,
 } from "@/lib/dados";
-import { OPERACOES, STATUS_OPCOES, TURNOS, formatarDuracao } from "@/lib/constantes";
+import { formatarDuracao } from "@/lib/constantes";
 import mascote from "@/assets/mascote-trivium.png.asset.json";
 
 export const Route = createFileRoute("/")({
@@ -46,6 +49,9 @@ function Lancamento() {
   const operadores = useQuery(operadoresQuery);
   const celulas = useQuery(celulasQuery);
   const abertos = useQuery(abertosQuery);
+  const TURNOS = (useQuery(turnosQuery).data ?? []).map((t) => t.nome);
+  const STATUS_OPCOES = (useQuery(statusQuery).data ?? []).map((s) => s.nome);
+  const OPERACOES = (useQuery(operacoesQuery).data ?? []).map((o) => o.nome);
 
   const [form, setForm] = useState(vazio);
   const [operacoes, setOperacoes] = useState<string[]>([]);
