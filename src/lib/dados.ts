@@ -90,3 +90,29 @@ export async function lancarRegistro(input: {
   const { error } = await supabase.from("registros").insert(input);
   if (error) throw new Error(error.message);
 }
+
+function listaSimples(tabela: "status_opcoes" | "operacoes" | "turnos") {
+  return {
+    queryKey: [tabela],
+    queryFn: async () => {
+      const { data, error } = await supabase.from(tabela).select("id, nome").order("nome");
+      if (error) throw error;
+      return data;
+    },
+  };
+}
+export const statusQuery = listaSimples("status_opcoes");
+export const operacoesQuery = listaSimples("operacoes");
+export const turnosQuery = listaSimples("turnos");
+
+export const escalasQuery = {
+  queryKey: ["escalas"],
+  queryFn: async () => {
+    const [h, c] = await Promise.all([
+      supabase.from("escala_horarios").select("escala, turno, inicio, fim, celulas").order("inicio"),
+      supabase.from("configuracoes").select("valor").eq("chave", "escala_ativa").maybeSingle(),
+    ]);
+    if (h.error) throw h.error;
+    return { horarios: h.data, ativa: c.data?.valor ?? "" };
+  },
+};
