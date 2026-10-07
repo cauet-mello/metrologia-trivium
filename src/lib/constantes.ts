@@ -1,13 +1,8 @@
-export const OPERACOES = ["OP40", "OP50", "OP60", "OP70", "DESBASTE", "GRAVAÇÃO", "BROCHA"] as const;
-export const TURNOS = ["1", "2", "3"] as const;
-export const STATUS_OPCOES = ["Rota", "Sequência", "Prioridade", "Setup", "Frequência"] as const;
-
-/** Escolha manual do inspetor prevalece; senão Prioridade → Zeiss 2, demais → Zeiss 1. */
+/** Escolha manual do inspetor prevalece; senão Frequência → Zeiss 1, demais → Zeiss 2. */
 export function filaZeiss(status: string, fila?: string | null): "Zeiss 1" | "Zeiss 2" {
   if (fila === "Zeiss 1" || fila === "Zeiss 2") return fila;
-  return status === "Prioridade" ? "Zeiss 2" : "Zeiss 1";
+  return status === "Frequência" ? "Zeiss 1" : "Zeiss 2";
 }
-
 export function formatarHora(iso: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });

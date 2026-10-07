@@ -5,23 +5,36 @@ import { useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { BotaoSairInspetor, PortaoInspetor } from "@/components/PortaoInspetor";
-import { celulasQuery, modelosQuery, operadoresQuery } from "@/lib/dados";
 import {
-  removerCelula,
-  removerModelo,
-  removerOperador,
+  celulasQuery,
+  escalasQuery,
+  modelosQuery,
+  operacoesQuery,
+  operadoresQuery,
+  statusQuery,
+  turnosQuery,
+} from "@/lib/dados";
+import {
+  definirEscalaAtiva,
+  listarAlteracoes,
+  listarInspetores,
+  removerItem,
   salvarCelula,
+  salvarInspetor,
+  salvarItemSimples,
   salvarModelo,
   salvarOperador,
+  trocarSenhaInspetor,
 } from "@/lib/inspetor.functions";
+import { formatarData, formatarHora } from "@/lib/constantes";
 
 export const Route = createFileRoute("/cadastros")({
   head: () => ({
     meta: [
       { title: "Cadastros | Trivium Qualidade" },
-      { name: "description", content: "Gerencie operadores, modelos de ferrolho e células CNC." },
+      { name: "description", content: "Gerencie operadores, modelos, células, status, operações, turnos, inspetores e escalas." },
       { property: "og:title", content: "Cadastros | Trivium Qualidade" },
-      { property: "og:description", content: "Operadores, modelos e células do controle de ferrolhos." },
+      { property: "og:description", content: "Listas e configurações do controle de ferrolhos." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -37,10 +50,16 @@ function Cadastros() {
           <BotaoSairInspetor />
         </div>
         <div className="grid gap-5 lg:grid-cols-3">
+          <EscalaAtiva />
+          <Inspetores />
+          <Simples titulo="Status" tabela="status_opcoes" query={statusQuery} placeholder="Novo status" />
+          <Simples titulo="Operações Medidas" tabela="operacoes" query={operacoesQuery} placeholder="Ex.: OP80" />
+          <Simples titulo="Turnos" tabela="turnos" query={turnosQuery} placeholder="Ex.: 4" />
           <Operadores />
           <Modelos />
           <Celulas />
         </div>
+        <Historico />
       </PortaoInspetor>
     </AppShell>
   );
@@ -56,6 +75,7 @@ function useAcao() {
     try {
       await fn();
       await qc.invalidateQueries({ queryKey: [chave] });
+      await qc.invalidateQueries({ queryKey: ["alteracoes"] });
       return true;
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao salvar.");
@@ -85,10 +105,147 @@ function Lista({ itens }: { itens: { id: string; texto: string; onRemover: () =>
   );
 }
 
+type Tabela = "operadores" | "modelos" | "celulas" | "status_opcoes" | "operacoes" | "turnos" | "inspetores";
+
+function useRemover() {
+  const fn = useServerFn(removerItem);
+  return (tabela: Tabela, id: string) => fn({ data: { tabela, id } });
+}
+
+function Simples({
+  titulo,
+  tabela,
+  query,
+  placeholder,
+}: {
+  titulo: string;
+  tabela: "status_opcoes" | "operacoes" | "turnos";
+  query: { queryKey: string[]; queryFn: () => Promise<{ id: string; nome: string }[]> };
+  placeholder: string;
+}) {
+  const { data = [] } = useQuery(query);
+  const salvar = useServerFn(salvarItemSimples);
+  const remover = useRemover();
+  const { erro, ocupado, rodar } = useAcao();
+  const [nome, setNome] = useState("");
+  return (
+    <section className="panel p-5">
+      <h2 className="font-display text-lg font-bold">{titulo} <span className="chip ml-2">{data.length}</span></h2>
+      <form
+        className="mt-4 flex gap-2"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (await rodar(() => salvar({ data: { tabela, nome } }), tabela)) setNome("");
+        }}
+      >
+        <input className="control" placeholder={placeholder} value={nome} onChange={(e) => setNome(e.target.value)} />
+        <button className="btn-base btn-primary" disabled={ocupado || !nome}>Adicionar</button>
+      </form>
+      {erro && <p className="mt-2 text-sm text-destructive">{erro}</p>}
+      <Lista itens={data.map((o) => ({ id: o.id, texto: o.nome, onRemover: () => rodar(() => remover(tabela, o.id), tabela) }))} />
+    </section>
+  );
+}
+
+function EscalaAtiva() {
+  const { data } = useQuery(escalasQuery);
+  const salvar = useServerFn(definirEscalaAtiva);
+  const { erro, ocupado, rodar } = useAcao();
+  const escalas = [...new Set((data?.horarios ?? []).map((h) => h.escala))];
+  const ativa = data?.ativa ?? "";
+  const horarios = (data?.horarios ?? []).filter((h) => h.escala === ativa);
+  return (
+    <section className="panel p-5">
+      <h2 className="font-display text-lg font-bold">Escala de medição</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Define os horários usados para marcar Atraso automaticamente (faixa ±10 min).
+      </p>
+      <select
+        className="control mt-4"
+        value={ativa}
+        disabled={ocupado}
+        onChange={(e) => rodar(() => salvar({ data: { escala: e.target.value } }), "escalas")}
+      >
+        <option value="">Nenhuma (sem atraso automático)</option>
+        {escalas.map((e) => (
+          <option key={e} value={e}>{e}</option>
+        ))}
+      </select>
+      {erro && <p className="mt-2 text-sm text-destructive">{erro}</p>}
+      {horarios.length > 0 && (
+        <ul className="mt-4 max-h-64 divide-y divide-border/60 overflow-y-auto text-xs">
+          {horarios.map((h, i) => (
+            <li key={i} className="flex gap-2 py-1.5">
+              <span className="w-8 text-muted-foreground">{h.turno}º</span>
+              <span className="w-24">{h.inicio.slice(0, 5)}–{h.fim.slice(0, 5)}</span>
+              <span className="text-muted-foreground">Cél. {h.celulas.join(", ")}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function Inspetores() {
+  const listar = useServerFn(listarInspetores);
+  const { data = [] } = useQuery({ queryKey: ["inspetores"], queryFn: () => listar({}) });
+  const salvar = useServerFn(salvarInspetor);
+  const trocar = useServerFn(trocarSenhaInspetor);
+  const remover = useRemover();
+  const { erro, ocupado, rodar } = useAcao();
+  const [nome, setNome] = useState("");
+  const [senha, setSenha] = useState("");
+  return (
+    <section className="panel p-5">
+      <h2 className="font-display text-lg font-bold">Inspetores <span className="chip ml-2">{data.length}</span></h2>
+      <form
+        className="mt-4 flex flex-col gap-2"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (await rodar(() => salvar({ data: { nome, senha } }), "inspetores")) {
+            setNome("");
+            setSenha("");
+          }
+        }}
+      >
+        <input className="control" placeholder="Nome do inspetor" value={nome} onChange={(e) => setNome(e.target.value)} />
+        <div className="flex gap-2">
+          <input type="password" className="control" placeholder="Senha (mín. 6)" autoComplete="new-password" value={senha} onChange={(e) => setSenha(e.target.value)} />
+          <button className="btn-base btn-primary" disabled={ocupado || !nome || !senha}>Adicionar</button>
+        </div>
+      </form>
+      {erro && <p className="mt-2 text-sm text-destructive">{erro}</p>}
+      <ul className="mt-4 divide-y divide-border/60">
+        {data.map((i) => (
+          <li key={i.id} className="flex items-center gap-3 py-2 text-sm">
+            <span className="mr-auto">{i.nome}</span>
+            <button
+              className="text-xs text-muted-foreground hover:text-accent"
+              onClick={() => {
+                const nova = prompt(`Nova senha para ${i.nome} (mín. 6 caracteres):`);
+                if (nova) rodar(() => trocar({ data: { id: i.id, senha: nova } }), "inspetores");
+              }}
+            >
+              Trocar senha
+            </button>
+            <button
+              className="text-xs text-muted-foreground hover:text-destructive"
+              onClick={() => confirm(`Remover "${i.nome}"?`) && rodar(() => remover("inspetores", i.id), "inspetores")}
+            >
+              Remover
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function Operadores() {
   const { data = [] } = useQuery(operadoresQuery);
   const salvar = useServerFn(salvarOperador);
-  const remover = useServerFn(removerOperador);
+  const remover = useRemover();
   const { erro, ocupado, rodar } = useAcao();
   const [nome, setNome] = useState("");
   return (
@@ -105,7 +262,7 @@ function Operadores() {
         <button className="btn-base btn-primary" disabled={ocupado || !nome}>Adicionar</button>
       </form>
       {erro && <p className="mt-2 text-sm text-destructive">{erro}</p>}
-      <Lista itens={data.map((o) => ({ id: o.id, texto: o.nome, onRemover: () => rodar(() => remover({ data: { id: o.id } }), "operadores") }))} />
+      <Lista itens={data.map((o) => ({ id: o.id, texto: o.nome, onRemover: () => rodar(() => remover("operadores", o.id), "operadores") }))} />
     </section>
   );
 }
@@ -113,7 +270,7 @@ function Operadores() {
 function Modelos() {
   const { data = [] } = useQuery(modelosQuery);
   const salvar = useServerFn(salvarModelo);
-  const remover = useServerFn(removerModelo);
+  const remover = useRemover();
   const { erro, ocupado, rodar } = useAcao();
   const [codigo, setCodigo] = useState("");
   const [nome, setNome] = useState("");
@@ -135,7 +292,7 @@ function Modelos() {
         <button className="btn-base btn-primary" disabled={ocupado || !nome || !codigo}>Adicionar</button>
       </form>
       {erro && <p className="mt-2 text-sm text-destructive">{erro}</p>}
-      <Lista itens={data.map((m) => ({ id: m.id, texto: `${m.codigo} · ${m.nome}`, onRemover: () => rodar(() => remover({ data: { id: m.id } }), "modelos") }))} />
+      <Lista itens={data.map((m) => ({ id: m.id, texto: `${m.codigo} · ${m.nome}`, onRemover: () => rodar(() => remover("modelos", m.id), "modelos") }))} />
     </section>
   );
 }
@@ -143,7 +300,7 @@ function Modelos() {
 function Celulas() {
   const { data = [] } = useQuery(celulasQuery);
   const salvar = useServerFn(salvarCelula);
-  const remover = useServerFn(removerCelula);
+  const remover = useRemover();
   const { erro, ocupado, rodar } = useAcao();
   const [numero, setNumero] = useState("");
   return (
@@ -160,7 +317,47 @@ function Celulas() {
         <button className="btn-base btn-primary" disabled={ocupado || !numero}>Adicionar</button>
       </form>
       {erro && <p className="mt-2 text-sm text-destructive">{erro}</p>}
-      <Lista itens={data.map((c) => ({ id: c.id, texto: `Célula ${c.numero}`, onRemover: () => rodar(() => remover({ data: { id: c.id } }), "celulas") }))} />
+      <Lista itens={data.map((c) => ({ id: c.id, texto: `Célula ${c.numero}`, onRemover: () => rodar(() => remover("celulas", c.id), "celulas") }))} />
+    </section>
+  );
+}
+
+function mostrarValor(v: string | null) {
+  if (!v) return "—";
+  return /^\d{4}-\d\d-\d\dT/.test(v) ? `${formatarData(v)} ${formatarHora(v)}` : v;
+}
+
+function Historico() {
+  const listar = useServerFn(listarAlteracoes);
+  const { data = [] } = useQuery({ queryKey: ["alteracoes"], queryFn: () => listar({}) });
+  return (
+    <section className="panel mt-5 p-5">
+      <h2 className="font-display text-lg font-bold">Histórico de Alterações</h2>
+      <div className="mt-4 max-h-96 overflow-y-auto pr-1">
+        <table className="w-full text-left text-sm">
+          <thead className="text-xs uppercase text-muted-foreground">
+            <tr>
+              <th className="py-2">Data / hora</th><th>Inspetor</th><th>Perfil</th><th>Tipo</th><th>Registro</th><th>Anterior</th><th>Novo</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/60">
+            {data.map((a) => (
+              <tr key={a.id}>
+                <td className="py-2">{formatarData(a.created_at)} {formatarHora(a.created_at)}</td>
+                <td>{a.inspetor}</td>
+                <td>{a.perfil}</td>
+                <td>{a.tipo}</td>
+                <td>{a.registro_id ? `#${a.registro_id}` : "—"}</td>
+                <td>{mostrarValor(a.anterior)}</td>
+                <td>{mostrarValor(a.novo)}</td>
+              </tr>
+            ))}
+            {data.length === 0 && (
+              <tr><td colSpan={7} className="py-4 text-muted-foreground">Nenhuma alteração registrada ainda.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

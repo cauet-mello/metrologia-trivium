@@ -5,9 +5,9 @@ import { useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { BotaoSairInspetor, PortaoInspetor } from "@/components/PortaoInspetor";
-import { abertosQuery, celulasQuery, operadoresQuery } from "@/lib/dados";
+import { abertosQuery, celulasQuery, operadoresQuery, statusQuery } from "@/lib/dados";
 import { fecharRegistro, moverFila } from "@/lib/inspetor.functions";
-import { STATUS_OPCOES, filaZeiss, formatarDuracao, formatarHora } from "@/lib/constantes";
+import { filaZeiss, formatarDuracao, formatarHora } from "@/lib/constantes";
 
 export const Route = createFileRoute("/fechamento")({
   head: () => ({
@@ -45,6 +45,7 @@ function Lista() {
   const abertos = useQuery(abertosQuery);
   const celulas = useQuery(celulasQuery);
   const operadores = useQuery(operadoresQuery);
+  const STATUS_OPCOES = (useQuery(statusQuery).data ?? []).map((s) => s.nome);
   const queryClient = useQueryClient();
   const fechar = useServerFn(fecharRegistro);
 
@@ -57,7 +58,8 @@ function Lista() {
   const [alvo, setAlvo] = useState<"Zeiss 1" | "Zeiss 2" | null>(null);
   const moverFn = useServerFn(moverFila);
   const mover = useMutation({
-    mutationFn: async (v: { id: number; fila: "Zeiss 1" | "Zeiss 2" }) => moverFn({ data: v }),
+    mutationFn: async (v: { id: number; fila: "Zeiss 1" | "Zeiss 2" }) =>
+      moverFn({ data: { ...v, anterior: v.fila === "Zeiss 1" ? "Zeiss 2" : "Zeiss 1" } }),
     onSuccess: async () => {
       setErro(null);
       await queryClient.invalidateQueries({ queryKey: ["registros"] });
@@ -182,7 +184,7 @@ function Lista() {
               <h2 className="font-display text-lg font-bold">
                 Fila {fila.nome}
                 <span className="ml-2 text-xs font-normal text-muted-foreground">
-                  {fila.nome === "Zeiss 2" ? "Prioridade" : "Demais status"}
+                  {fila.nome === "Zeiss 1" ? "Frequência" : "Demais status"}
                 </span>
               </h2>
               <span className="chip">{fila.itens.length} em aberto</span>
