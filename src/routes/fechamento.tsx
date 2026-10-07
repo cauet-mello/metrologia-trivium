@@ -184,7 +184,7 @@ function Lista() {
               <h2 className="font-display text-lg font-bold">
                 Fila {fila.nome}
                 <span className="ml-2 text-xs font-normal text-muted-foreground">
-                  {fila.nome === "Zeiss 2" ? "Prioridade" : "Demais status"}
+                  {fila.nome === "Zeiss 1" ? "Frequência" : "Demais status"}
                 </span>
               </h2>
               <span className="chip">{fila.itens.length} em aberto</span>
