@@ -16,7 +16,6 @@ import {
 } from "@/lib/dados";
 import {
   definirEscalaAtiva,
-  listarAlteracoes,
   listarInspetores,
   removerItem,
   salvarCelula,
@@ -26,7 +25,6 @@ import {
   salvarOperador,
   trocarSenhaInspetor,
 } from "@/lib/inspetor.functions";
-import { formatarData, formatarHora } from "@/lib/constantes";
 
 export const Route = createFileRoute("/cadastros")({
   head: () => ({
@@ -59,7 +57,6 @@ function Cadastros() {
           <Modelos />
           <Celulas />
         </div>
-        <Historico />
       </PortaoInspetor>
     </AppShell>
   );
@@ -318,46 +315,6 @@ function Celulas() {
       </form>
       {erro && <p className="mt-2 text-sm text-destructive">{erro}</p>}
       <Lista itens={data.map((c) => ({ id: c.id, texto: `Célula ${c.numero}`, onRemover: () => rodar(() => remover("celulas", c.id), "celulas") }))} />
-    </section>
-  );
-}
-
-function mostrarValor(v: string | null) {
-  if (!v) return "—";
-  return /^\d{4}-\d\d-\d\dT/.test(v) ? `${formatarData(v)} ${formatarHora(v)}` : v;
-}
-
-function Historico() {
-  const listar = useServerFn(listarAlteracoes);
-  const { data = [] } = useQuery({ queryKey: ["alteracoes"], queryFn: () => listar({}) });
-  return (
-    <section className="panel mt-5 p-5">
-      <h2 className="font-display text-lg font-bold">Histórico de Alterações</h2>
-      <div className="mt-4 max-h-96 overflow-y-auto pr-1">
-        <table className="w-full text-left text-sm">
-          <thead className="text-xs uppercase text-muted-foreground">
-            <tr>
-              <th className="py-2">Data / hora</th><th>Inspetor</th><th>Perfil</th><th>Tipo</th><th>Registro</th><th>Anterior</th><th>Novo</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border/60">
-            {data.map((a) => (
-              <tr key={a.id}>
-                <td className="py-2">{formatarData(a.created_at)} {formatarHora(a.created_at)}</td>
-                <td>{a.inspetor}</td>
-                <td>{a.perfil}</td>
-                <td>{a.tipo}</td>
-                <td>{a.registro_id ? `#${a.registro_id}` : "—"}</td>
-                <td>{mostrarValor(a.anterior)}</td>
-                <td>{mostrarValor(a.novo)}</td>
-              </tr>
-            ))}
-            {data.length === 0 && (
-              <tr><td colSpan={7} className="py-4 text-muted-foreground">Nenhuma alteração registrada ainda.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
     </section>
   );
 }

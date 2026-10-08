@@ -6,8 +6,8 @@ import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { BotaoSairInspetor, PortaoInspetor } from "@/components/PortaoInspetor";
 import { abertosQuery, celulasQuery, operadoresQuery, statusQuery } from "@/lib/dados";
-import { fecharRegistro, moverFila } from "@/lib/inspetor.functions";
-import { filaZeiss, formatarDuracao, formatarHora } from "@/lib/constantes";
+import { fecharRegistro, listarAlteracoes, moverFila } from "@/lib/inspetor.functions";
+import { filaZeiss, formatarData, formatarDuracao, formatarHora } from "@/lib/constantes";
 
 export const Route = createFileRoute("/fechamento")({
   head: () => ({
@@ -23,6 +23,8 @@ export const Route = createFileRoute("/fechamento")({
         property: "og:description",
         content: "Encerramento das medições de ferrolho com registro de horário e observações.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Fechamento,
@@ -36,6 +38,7 @@ function Fechamento() {
     >
       <PortaoInspetor>
         <Lista />
+        <Historico />
       </PortaoInspetor>
     </AppShell>
   );
@@ -63,6 +66,7 @@ function Lista() {
     onSuccess: async () => {
       setErro(null);
       await queryClient.invalidateQueries({ queryKey: ["registros"] });
+      await queryClient.invalidateQueries({ queryKey: ["alteracoes"] });
     },
     onError: (e: Error) => setErro(e.message),
   });
@@ -73,6 +77,7 @@ function Lista() {
     onSuccess: async () => {
       setErro(null);
       await queryClient.invalidateQueries({ queryKey: ["registros"] });
+      await queryClient.invalidateQueries({ queryKey: ["alteracoes"] });
     },
     onError: (e: Error) => setErro(e.message),
   });
@@ -277,5 +282,45 @@ function Lista() {
         ))}
       </div>
     </div>
+  );
+}
+
+function mostrarValor(v: string | null) {
+  if (!v) return "—";
+  return /^\d{4}-\d\d-\d\dT/.test(v) ? `${formatarData(v)} ${formatarHora(v)}` : v;
+}
+
+function Historico() {
+  const listar = useServerFn(listarAlteracoes);
+  const { data = [] } = useQuery({ queryKey: ["alteracoes"], queryFn: () => listar({}) });
+  return (
+    <section className="panel mt-5 p-5">
+      <h2 className="font-display text-lg font-bold">Histórico de Alterações</h2>
+      <div className="mt-4 max-h-96 overflow-y-auto pr-1">
+        <table className="w-full text-left text-sm">
+          <thead className="text-xs uppercase text-muted-foreground">
+            <tr>
+              <th className="py-2">Data / hora</th><th>Inspetor</th><th>Perfil</th><th>Tipo</th><th>Registro</th><th>Anterior</th><th>Novo</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/60">
+            {data.map((a) => (
+              <tr key={a.id}>
+                <td className="py-2">{formatarData(a.created_at)} {formatarHora(a.created_at)}</td>
+                <td>{a.inspetor}</td>
+                <td>{a.perfil}</td>
+                <td>{a.tipo}</td>
+                <td>{a.registro_id ? `#${a.registro_id}` : "—"}</td>
+                <td>{mostrarValor(a.anterior)}</td>
+                <td>{mostrarValor(a.novo)}</td>
+              </tr>
+            ))}
+            {data.length === 0 && (
+              <tr><td colSpan={7} className="py-4 text-muted-foreground">Nenhuma alteração registrada ainda.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
