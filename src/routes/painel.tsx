@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { usePortaoInspetor } from "@/components/PortaoInspetor";
 import { historicoQuery, type Registro } from "@/lib/dados";
-import { alterarSaida } from "@/lib/inspetor.functions";
+import { alterarSaida, statusInspetor } from "@/lib/inspetor.functions";
 import { duracaoMinutos, formatarData, formatarDuracao, formatarHora } from "@/lib/constantes";
 import { exportarPlanilha } from "@/lib/exportar";
 
@@ -35,6 +35,29 @@ function Painel() {
   const [datasExport, setDatasExport] = useState<string[]>([]);
   const inspetor = usePortaoInspetor();
   const liberado = inspetor.data?.liberado === true;
+  const verificarInspetor = useServerFn(statusInspetor);
+  const queryClient = useQueryClient();
+  const [gerando, setGerando] = useState(false);
+  const [erroPlanilha, setErroPlanilha] = useState<string | null>(null);
+
+  async function gerarPlanilha(registros: Registro[]) {
+    if (!liberado || gerando || !registros.length) return;
+    setGerando(true);
+    setErroPlanilha(null);
+    try {
+      const acesso = await verificarInspetor({});
+      queryClient.setQueryData(["inspetor"], acesso);
+      if (!acesso.liberado) {
+        setErroPlanilha("Entre novamente como inspetor para gerar a planilha.");
+        return;
+      }
+      exportarPlanilha(registros);
+    } catch {
+      setErroPlanilha("Não foi possível verificar seu acesso. Tente novamente.");
+    } finally {
+      setGerando(false);
+    }
+  }
 
   // Virada do dia: à meia-noite o painel passa automaticamente para o novo dia.
   const ultimoHoje = useRef(hojeISO());
@@ -73,20 +96,23 @@ function Painel() {
   return (
     <AppShell
       titulo="Painel de Indicadores"
-      descricao="Acompanhe o volume de medições e baixe a planilha atualizada."
+      descricao={liberado ? "Acompanhe o volume de medições e baixe a planilha atualizada." : "Acompanhe o volume de medições."}
       acao={
         <div className="flex flex-wrap gap-2">
           <input type="date" className="control w-auto" value={dia} onChange={(e) => setDia(e.target.value)} />
-          <button className="btn-base btn-ghost" onClick={() => exportarPlanilha(doDia)} disabled={!doDia.length}>
+          {liberado && <>
+          <button className="btn-base btn-ghost" onClick={() => gerarPlanilha(doDia)} disabled={gerando || !doDia.length}>
             Planilha do dia
           </button>
-          <button className="btn-base btn-primary" onClick={() => exportarPlanilha(data)} disabled={!data.length}>
+          <button className="btn-base btn-primary" onClick={() => gerarPlanilha(data)} disabled={gerando || !data.length}>
             Planilha completa
           </button>
+          </>}
         </div>
       }
     >
-      <section className="panel mb-5 flex flex-wrap items-end gap-3 p-5">
+      {erroPlanilha && <p role="alert" className="mb-5 text-sm text-destructive">{erroPlanilha}</p>}
+      {liberado && <section className="panel mb-5 flex flex-wrap items-end gap-3 p-5">
         <div>
           <label className="field-label" htmlFor="add-data">Planilha por datas selecionadas</label>
           <input
@@ -118,12 +144,12 @@ function Painel() {
         </div>
         <button
           className="btn-base btn-primary"
-          disabled={!doSelecionadas.length}
-          onClick={() => exportarPlanilha(doSelecionadas)}
+          disabled={gerando || !doSelecionadas.length}
+          onClick={() => gerarPlanilha(doSelecionadas)}
         >
           Gerar planilha ({doSelecionadas.length})
         </button>
-      </section>
+      </section>}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi rotulo="Lançamentos no dia" valor={doDia.length} />
         <Kpi rotulo="Medições concluídas" valor={fechados.length} />
