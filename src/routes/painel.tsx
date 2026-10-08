@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { usePortaoInspetor } from "@/components/PortaoInspetor";
 import { historicoQuery, type Registro } from "@/lib/dados";
 import { alterarSaida } from "@/lib/inspetor.functions";
 import { duracaoMinutos, formatarData, formatarDuracao, formatarHora } from "@/lib/constantes";
@@ -31,6 +32,9 @@ function Painel() {
   const { data = [], isPending } = useQuery({ ...historicoQuery, refetchInterval: 60000 });
   const [dia, setDia] = useState(hojeISO());
   const [erroSaida, setErroSaida] = useState<string | null>(null);
+  const [datasExport, setDatasExport] = useState<string[]>([]);
+  const inspetor = usePortaoInspetor();
+  const liberado = inspetor.data?.liberado === true;
 
   // Virada do dia: à meia-noite o painel passa automaticamente para o novo dia.
   const ultimoHoje = useRef(hojeISO());
@@ -62,6 +66,10 @@ function Painel() {
   }, [doDia]);
   const maxCel = Math.max(1, ...porCelula.map(([, n]) => n));
 
+  const doSelecionadas = data.filter((r) =>
+    datasExport.includes(new Date(r.hora_entrada).toLocaleDateString("sv-SE")),
+  );
+
   return (
     <AppShell
       titulo="Painel de Indicadores"
@@ -78,6 +86,44 @@ function Painel() {
         </div>
       }
     >
+      <section className="panel mb-5 flex flex-wrap items-end gap-3 p-5">
+        <div>
+          <label className="field-label" htmlFor="add-data">Planilha por datas selecionadas</label>
+          <input
+            id="add-data"
+            type="date"
+            className="control w-auto"
+            value=""
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v && !datasExport.includes(v)) setDatasExport([...datasExport, v].sort());
+            }}
+          />
+        </div>
+        <div className="flex flex-1 flex-wrap gap-2">
+          {datasExport.length === 0 && (
+            <span className="text-sm text-muted-foreground">Adicione um ou mais dias.</span>
+          )}
+          {datasExport.map((d) => (
+            <button
+              key={d}
+              type="button"
+              className="chip hover:border-destructive/50 hover:text-destructive"
+              title="Remover data"
+              onClick={() => setDatasExport(datasExport.filter((x) => x !== d))}
+            >
+              {d.split("-").reverse().join("/")} ✕
+            </button>
+          ))}
+        </div>
+        <button
+          className="btn-base btn-primary"
+          disabled={!doSelecionadas.length}
+          onClick={() => exportarPlanilha(doSelecionadas)}
+        >
+          Gerar planilha ({doSelecionadas.length})
+        </button>
+      </section>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi rotulo="Lançamentos no dia" valor={doDia.length} />
         <Kpi rotulo="Medições concluídas" valor={fechados.length} />
@@ -127,7 +173,15 @@ function Painel() {
                     <td>{r.operador}</td>
                     <td>{r.operacao}</td>
                     <td>{formatarData(r.hora_entrada)} {formatarHora(r.hora_entrada)}</td>
-                    <td>{r.hora_saida ? <SaidaEditavel r={r} onErro={setErroSaida} /> : <span className="chip">Aberto</span>}</td>
+                    <td>
+                      {!r.hora_saida ? (
+                        <span className="chip">Aberto</span>
+                      ) : liberado ? (
+                        <SaidaEditavel r={r} onErro={setErroSaida} />
+                      ) : (
+                        formatarHora(r.hora_saida)
+                      )}
+                    </td>
                     <td>{formatarDuracao(r.hora_entrada, r.hora_saida)}</td>
                     <td>{r.atraso && <span className="chip border-destructive/50 text-destructive">Atraso</span>}</td>
                   </tr>
