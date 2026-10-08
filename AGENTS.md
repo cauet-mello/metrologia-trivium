@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Install SheetJS (`xlsx`) from its official versioned distribution URL, because the npm release is outdated and contains known vulnerabilities.
