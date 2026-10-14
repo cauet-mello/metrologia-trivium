@@ -2,8 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import { Pencil, Save } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { BotaoSairInspetor, PortaoInspetor } from "@/components/PortaoInspetor";
 import {
   celulasQuery,
@@ -16,6 +19,7 @@ import {
 } from "@/lib/dados";
 import {
   definirEscalaAtiva,
+  editarCadastro,
   listarInspetores,
   removerItem,
   salvarCelula,
@@ -84,12 +88,13 @@ function useAcao() {
   return { erro, ocupado, rodar };
 }
 
-function Lista({ itens }: { itens: { id: string; texto: string; onRemover: () => void }[] }) {
+function Lista({ itens, tabela }: { itens: { id: string; texto: string; nome?: string; codigo?: number; numero?: number; onRemover: () => void }[]; tabela: Tabela }) {
   return (
     <ul className="mt-4 max-h-[28rem] divide-y divide-border/60 overflow-y-auto">
       {itens.map((i) => (
         <li key={i.id} className="flex items-center gap-2 py-2 text-sm">
-          <span className="mr-auto">{i.texto}</span>
+          <span className="mr-auto min-w-0 break-words">{i.texto}</span>
+          <EditarCadastro tabela={tabela} item={i} />
           <button
             className="text-xs text-muted-foreground hover:text-destructive"
             onClick={() => confirm(`Remover "${i.texto}"?`) && i.onRemover()}
@@ -103,6 +108,54 @@ function Lista({ itens }: { itens: { id: string; texto: string; onRemover: () =>
 }
 
 type Tabela = "operadores" | "modelos" | "celulas" | "status_opcoes" | "operacoes" | "turnos" | "inspetores";
+
+function EditarCadastro({ tabela, item }: { tabela: Tabela; item: { id: string; nome?: string; codigo?: number; numero?: number } }) {
+  const salvar = useServerFn(editarCadastro);
+  const qc = useQueryClient();
+  const [aberto, setAberto] = useState(false);
+  const [nome, setNome] = useState("");
+  const [numero, setNumero] = useState("");
+  const { erro, ocupado, rodar } = useAcao();
+  return (
+    <Dialog open={aberto} onOpenChange={(valor) => { if (!ocupado) setAberto(valor); }}>
+      <Button type="button" variant="ghost" size="sm" title="Editar cadastro" className="shrink-0" onClick={() => {
+        setNome(item.nome ?? "");
+        setNumero(String(item.codigo ?? item.numero ?? ""));
+        setAberto(true);
+      }}><Pencil />Editar</Button>
+      <DialogContent className="max-w-[min(32rem,calc(100%-2rem))]" aria-describedby={undefined}>
+        <DialogTitle>Editar cadastro</DialogTitle>
+        <form className="grid gap-4" onSubmit={async (e) => {
+          e.preventDefault();
+          const dados = tabela === "celulas"
+            ? { tabela, id: item.id, numero: Number(numero) } as const
+            : tabela === "modelos"
+              ? { tabela, id: item.id, nome, codigo: Number(numero) } as const
+              : { tabela, id: item.id, nome };
+          if (await rodar(() => salvar({ data: dados }), tabela)) {
+            if (tabela === "inspetores") await Promise.all([
+              qc.invalidateQueries({ queryKey: ["inspetores-login"] }),
+              qc.invalidateQueries({ queryKey: ["inspetor"] }),
+            ]);
+            setAberto(false);
+          }
+        }}>
+          {tabela !== "celulas" && <label className="grid gap-2 text-sm">{tabela === "modelos" ? "Descrição" : "Nome"}
+            <input className="control" required minLength={["operadores", "inspetores", "modelos"].includes(tabela) ? 3 : 1} maxLength={200} value={nome} disabled={ocupado} onChange={(e) => setNome(e.target.value)} />
+          </label>}
+          {(tabela === "modelos" || tabela === "celulas") && <label className="grid gap-2 text-sm">{tabela === "modelos" ? "Código" : "Número da célula"}
+            <input className="control" type="number" required min={1} step={1} value={numero} disabled={ocupado} onChange={(e) => setNumero(e.target.value)} />
+          </label>}
+          {erro && <p role="alert" className="text-sm text-destructive">{erro}</p>}
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" disabled={ocupado} onClick={() => setAberto(false)}>Cancelar</Button>
+            <Button type="submit" disabled={ocupado}><Save />{ocupado ? "Salvando…" : "Salvar"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function useRemover() {
   const fn = useServerFn(removerItem);
@@ -139,7 +192,7 @@ function Simples({
         <button className="btn-base btn-primary" disabled={ocupado || !nome}>Adicionar</button>
       </form>
       {erro && <p className="mt-2 text-sm text-destructive">{erro}</p>}
-      <Lista itens={data.map((o) => ({ id: o.id, texto: o.nome, onRemover: () => rodar(() => remover(tabela, o.id), tabela) }))} />
+      <Lista tabela={tabela} itens={data.map((o) => ({ ...o, texto: o.nome, onRemover: () => rodar(() => remover(tabela, o.id), tabela) }))} />
     </section>
   );
 }
@@ -216,7 +269,8 @@ function Inspetores() {
       <ul className="mt-4 divide-y divide-border/60">
         {data.map((i) => (
           <li key={i.id} className="flex items-center gap-3 py-2 text-sm">
-            <span className="mr-auto">{i.nome}</span>
+            <span className="mr-auto min-w-0 break-words">{i.nome}</span>
+            <EditarCadastro tabela="inspetores" item={i} />
             <button
               className="text-xs text-muted-foreground hover:text-accent"
               onClick={() => {
@@ -259,7 +313,7 @@ function Operadores() {
         <button className="btn-base btn-primary" disabled={ocupado || !nome}>Adicionar</button>
       </form>
       {erro && <p className="mt-2 text-sm text-destructive">{erro}</p>}
-      <Lista itens={data.map((o) => ({ id: o.id, texto: o.nome, onRemover: () => rodar(() => remover("operadores", o.id), "operadores") }))} />
+      <Lista tabela="operadores" itens={data.map((o) => ({ ...o, texto: o.nome, onRemover: () => rodar(() => remover("operadores", o.id), "operadores") }))} />
     </section>
   );
 }
@@ -289,7 +343,7 @@ function Modelos() {
         <button className="btn-base btn-primary" disabled={ocupado || !nome || !codigo}>Adicionar</button>
       </form>
       {erro && <p className="mt-2 text-sm text-destructive">{erro}</p>}
-      <Lista itens={data.map((m) => ({ id: m.id, texto: `${m.codigo} · ${m.nome}`, onRemover: () => rodar(() => remover("modelos", m.id), "modelos") }))} />
+      <Lista tabela="modelos" itens={data.map((m) => ({ ...m, texto: `${m.codigo} · ${m.nome}`, onRemover: () => rodar(() => remover("modelos", m.id), "modelos") }))} />
     </section>
   );
 }
@@ -314,7 +368,7 @@ function Celulas() {
         <button className="btn-base btn-primary" disabled={ocupado || !numero}>Adicionar</button>
       </form>
       {erro && <p className="mt-2 text-sm text-destructive">{erro}</p>}
-      <Lista itens={data.map((c) => ({ id: c.id, texto: `Célula ${c.numero}`, onRemover: () => rodar(() => remover("celulas", c.id), "celulas") }))} />
+      <Lista tabela="celulas" itens={data.map((c) => ({ ...c, texto: `Célula ${c.numero}`, onRemover: () => rodar(() => remover("celulas", c.id), "celulas") }))} />
     </section>
   );
 }
