@@ -26,6 +26,8 @@ export const Route = createFileRoute("/")({
           "Registre a entrada de ferrolhos na máquina tridimensional Zeiss: modelo, turno, operação, célula, operador e status.",
       },
       { property: "og:title", content: "Lançamento de ferrolhos | Trivium Qualidade" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       {
         property: "og:description",
         content: "Registre a entrada de ferrolhos na medição tridimensional em poucos segundos.",

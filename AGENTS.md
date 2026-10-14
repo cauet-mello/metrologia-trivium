@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Install SheetJS (`xlsx`) from its official versioned distribution URL, because the npm release is outdated and contains known vulnerabilities.
+- Cadastro edits use a shared dialog and a validated inspector-session server function, recording safe before/after snapshots without rewriting historical inspection records; this preserves audit history and restricts writes to inspectors.
