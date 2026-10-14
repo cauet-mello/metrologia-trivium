@@ -249,16 +249,17 @@ export const editarCadastro = createServerFn({ method: "POST" })
     const colunas = data.tabela === "modelos" ? "id, nome, codigo" : data.tabela === "celulas" ? "id, numero" : "id, nome";
     const { data: anterior, error: leitura } = await db.from(data.tabela).select(colunas).eq("id", data.id).single();
     if (leitura || !anterior) throw new Error("Cadastro não encontrado. Atualize a página e tente novamente.");
-    let valores: { nome?: string; codigo?: number; numero?: number };
-    if (data.tabela === "celulas") valores = { numero: data.numero };
-    else if (data.tabela === "modelos") valores = { nome: data.nome.toUpperCase(), codigo: data.codigo };
-    else valores = { nome: ["operadores", "inspetores"].includes(data.tabela) ? data.nome.toUpperCase() : data.nome };
-    const { data: novo, error } = await db.from(data.tabela).update(valores).eq("id", data.id).select(colunas).single();
+    const resultado = data.tabela === "celulas"
+      ? await db.from("celulas").update({ numero: data.numero }).eq("id", data.id).select("id, numero").single()
+      : data.tabela === "modelos"
+        ? await db.from("modelos").update({ nome: data.nome.toUpperCase(), codigo: data.codigo }).eq("id", data.id).select("id, nome, codigo").single()
+        : await db.from(data.tabela).update({ nome: ["operadores", "inspetores"].includes(data.tabela) ? data.nome.toUpperCase() : data.nome }).eq("id", data.id).select("id, nome").single();
+    const { data: novo, error } = resultado;
     if (error) throw erroDuplicado(error, "Já existe um cadastro com esse nome, código ou número.");
     await registrarAlteracao(quem, `Edição em ${data.tabela}`, null, JSON.stringify(anterior), JSON.stringify(novo));
     if (data.tabela === "inspetores") {
       const session = await useSession<InspetorSession>(sessionConfig());
-      if (session.data.inspetorId === data.id) await session.update({ nome: valores.nome });
+      if (session.data.inspetorId === data.id) await session.update({ nome: data.nome.toUpperCase() });
     }
     return { ok: true as const };
   });
