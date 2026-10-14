@@ -6,7 +6,7 @@ import { Pencil, Save } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { BotaoSairInspetor, PortaoInspetor } from "@/components/PortaoInspetor";
 import {
   celulasQuery,
