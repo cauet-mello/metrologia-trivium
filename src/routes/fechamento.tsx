@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
 import { BotaoSairInspetor, PortaoInspetor } from "@/components/PortaoInspetor";
 import { abertosQuery, celulasQuery, operadoresQuery, statusQuery } from "@/lib/dados";
 import { fecharRegistro, listarAlteracoes, moverFila } from "@/lib/inspetor.functions";
@@ -97,7 +98,7 @@ function Lista() {
   return (
     <div className="space-y-6">
       <div className="panel flex flex-wrap items-end gap-4 p-5">
-        <div className="min-w-44">
+        <div className="w-full min-w-0 sm:w-44">
           <label className="field-label" htmlFor="f-celula">
             Filtrar por célula
           </label>
@@ -115,7 +116,7 @@ function Lista() {
             ))}
           </select>
         </div>
-        <div className="min-w-64">
+        <div className="w-full min-w-0 sm:w-64">
           <label className="field-label" htmlFor="f-operador">
             Filtrar por operador
           </label>
@@ -133,7 +134,7 @@ function Lista() {
             ))}
           </select>
         </div>
-        <div className="min-w-44">
+        <div className="w-full min-w-0 sm:w-44">
           <label className="field-label" htmlFor="f-status">
             Filtrar por status
           </label>
@@ -185,10 +186,10 @@ function Lista() {
               if (r && filaZeiss(r.status, r.fila) !== fila.nome) mover.mutate({ id, fila: fila.nome });
             }}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-display text-lg font-bold">
                 Fila {fila.nome}
-                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                <span className="mt-1 block text-sm font-normal text-muted-foreground">
                   {fila.nome === "Zeiss 1" ? "Frequência" : "Demais status"}
                 </span>
               </h2>
@@ -210,19 +211,19 @@ function Lista() {
               }}
             >
               <div className="mb-3 flex justify-end">
-                <button
+                <Button
                   type="button"
-                  className="btn-base btn-ghost px-3 py-1 text-xs"
+                  className="btn-base btn-ghost h-auto whitespace-normal px-3 py-2 text-xs"
                   disabled={mover.isPending}
                   onClick={() =>
                     mover.mutate({ id: r.id, fila: fila.nome === "Zeiss 1" ? "Zeiss 2" : "Zeiss 1" })
                   }
                 >
                   Mover para {fila.nome === "Zeiss 1" ? "Zeiss 2" : "Zeiss 1"} →
-                </button>
+                </Button>
               </div>
               <div className="flex flex-wrap items-start gap-3">
-                <div className="mr-auto">
+                <div className="min-w-0 flex-1 basis-48 space-y-2 break-words">
                   <span className="chip">#{r.id}</span>
                   <h3 className="mt-2 text-base font-bold">{r.modelo}</h3>
                   <p className="text-sm text-muted-foreground">
@@ -268,13 +269,13 @@ function Lista() {
                 </span>
               </label>
 
-              <button
-                className="btn-base btn-primary mt-4 w-full"
+              <Button
+                className="btn-base btn-primary mt-4 h-auto w-full"
                 disabled={mutation.isPending}
                 onClick={() => mutation.mutate(r.id)}
               >
                 Fechar registro
-              </button>
+              </Button>
             </article>
               ))
             )}
@@ -292,31 +293,41 @@ function mostrarValor(v: string | null) {
 
 function Historico() {
   const listar = useServerFn(listarAlteracoes);
-  const { data = [] } = useQuery({ queryKey: ["alteracoes"], queryFn: () => listar({}) });
+  const { data = [], isPending, error } = useQuery({ queryKey: ["alteracoes"], queryFn: () => listar({}) });
+  const [registro, setRegistro] = useState("");
+  const filtradas = data.filter((a) => !registro || String(a.registro_id) === registro.replace(/^#/, ""));
   return (
-    <section className="panel mt-5 p-5">
-      <h2 className="font-display text-lg font-bold">Histórico de Alterações</h2>
-      <div className="mt-4 max-h-96 overflow-y-auto pr-1">
-        <table className="w-full text-left text-sm">
-          <thead className="text-xs uppercase text-muted-foreground">
+    <section className="mt-8 border-t border-border pt-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <h2 className="font-display text-lg font-bold">Histórico de Alterações</h2>
+        <div className="w-full sm:w-48">
+          <label htmlFor="historico-registro" className="field-label">Número do registro</label>
+          <input id="historico-registro" className="control" placeholder="Todos" value={registro} onChange={(e) => setRegistro(e.target.value)} />
+        </div>
+      </div>
+      {error && <p role="alert" className="mt-4 text-destructive">Não foi possível consultar o histórico. {error.message}</p>}
+      <div className="mt-5 max-h-96 overflow-auto rounded-md border border-border" role="region" aria-label="Histórico de Alterações" tabIndex={0}>
+        <table className="w-full min-w-[1100px] table-fixed text-left text-sm">
+          <thead className="sticky top-0 bg-surface text-xs uppercase text-muted-foreground">
             <tr>
-              <th className="py-2">Data / hora</th><th>Inspetor</th><th>Perfil</th><th>Tipo</th><th>Registro</th><th>Anterior</th><th>Novo</th>
+              <th className="w-40">Data / hora</th><th className="w-44">Responsável</th><th className="w-24">Perfil</th><th className="w-40">Tipo</th><th className="w-24">Registro</th><th>Anterior</th><th>Novo</th><th className="w-64">Observações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/60">
-            {data.map((a) => (
-              <tr key={a.id}>
-                <td className="py-2">{formatarData(a.created_at)} {formatarHora(a.created_at)}</td>
+            {filtradas.map((a) => (
+              <tr key={a.id} className="align-top">
+                <td>{formatarData(a.created_at)}<br />{formatarHora(a.created_at)}</td>
                 <td>{a.inspetor}</td>
                 <td>{a.perfil}</td>
                 <td>{a.tipo}</td>
                 <td>{a.registro_id ? `#${a.registro_id}` : "—"}</td>
-                <td>{mostrarValor(a.anterior)}</td>
-                <td>{mostrarValor(a.novo)}</td>
+                <td>{mostrarValor(a.status_anterior ?? a.anterior)}</td>
+                <td>{mostrarValor(a.status_novo ?? a.novo)}{a.status_novo && a.novo && <p className="mt-2 text-muted-foreground">{a.novo}</p>}</td>
+                <td className="whitespace-pre-wrap">{a.observacoes || "—"}</td>
               </tr>
             ))}
-            {data.length === 0 && (
-              <tr><td colSpan={7} className="py-4 text-muted-foreground">Nenhuma alteração registrada ainda.</td></tr>
+            {!error && filtradas.length === 0 && (
+              <tr><td colSpan={8} className="text-muted-foreground">{isPending ? "Carregando histórico…" : "Nenhuma alteração encontrada."}</td></tr>
             )}
           </tbody>
         </table>

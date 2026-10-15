@@ -86,9 +86,12 @@ export async function lancarRegistro(input: {
   celula: number;
   operador: string;
   status: string;
-}) {
-  const { error } = await supabase.from("registros").insert(input);
+}, confirmado = false): Promise<{ confirmacaoNecessaria: boolean; id?: number }> {
+  const { data, error } = await supabase.rpc("lancar_ferrolho", { p_dados: input, p_confirmado: confirmado });
   if (error) throw new Error(error.message);
+  if (!data || typeof data !== "object" || Array.isArray(data) || typeof data.confirmacaoNecessaria !== "boolean")
+    throw new Error("Não foi possível confirmar o lançamento. Tente novamente.");
+  return { confirmacaoNecessaria: data.confirmacaoNecessaria, id: typeof data.id === "number" ? data.id : undefined };
 }
 
 function listaSimples(tabela: "status_opcoes" | "operacoes" | "turnos") {

@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { AlertTriangle } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import {
   abertosQuery,
   celulasQuery,
@@ -59,12 +62,13 @@ function Lancamento() {
   const [operacoes, setOperacoes] = useState<string[]>([]);
   const [erros, setErros] = useState<string[]>([]);
   const [sucesso, setSucesso] = useState<string | null>(null);
+  const [confirmarAtraso, setConfirmarAtraso] = useState(false);
 
   const mutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (confirmado: boolean) => {
       const modelo = modelos.data?.find((m) => m.id === form.modeloId);
       if (!modelo) throw new Error("Modelo inválido.");
-      await lancarRegistro({
+      return lancarRegistro({
         modelo: modelo.nome,
         modelo_codigo: modelo.codigo,
         turno: form.turno,
@@ -72,14 +76,20 @@ function Lancamento() {
         celula: Number(form.celula),
         operador: form.operador,
         status: form.status,
-      });
+      }, confirmado);
     },
-    onSuccess: async () => {
+    onSuccess: async (resultado) => {
+      if (resultado.confirmacaoNecessaria) {
+        setConfirmarAtraso(true);
+        return;
+      }
+      setConfirmarAtraso(false);
       setForm(vazio);
       setOperacoes([]);
       setErros([]);
       setSucesso("Dados lançados com sucesso! O ferrolho entrou na fila de medição.");
       await queryClient.invalidateQueries({ queryKey: ["registros"] });
+      await queryClient.invalidateQueries({ queryKey: ["alteracoes"] });
     },
     onError: (e: Error) => setErros([e.message]),
   });
@@ -94,7 +104,7 @@ function Lancamento() {
     if (!form.status) lista.push("Selecione o status.");
     setErros(lista);
     setSucesso(null);
-    if (lista.length === 0) mutation.mutate();
+    if (lista.length === 0 && !mutation.isPending) mutation.mutate(false);
   }
 
   return (
@@ -110,7 +120,7 @@ function Lancamento() {
             enviar();
           }}
         >
-          <div className="grid gap-5 sm:grid-cols-2">
+          <fieldset disabled={mutation.isPending} className="grid min-w-0 gap-6 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <label className="field-label" htmlFor="modelo">
                 Modelo do ferrolho
@@ -172,14 +182,15 @@ function Lancamento() {
               <span className="field-label">Turno</span>
               <div className="flex gap-2">
                 {TURNOS.map((t) => (
-                  <button
+                  <Button
                     key={t}
                     type="button"
+                    aria-pressed={form.turno === t}
                     onClick={() => setForm({ ...form, turno: t })}
                     className={`btn-base flex-1 ${form.turno === t ? "btn-primary" : "btn-ghost"}`}
                   >
                     {t}º
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -209,9 +220,10 @@ function Lancamento() {
                 {OPERACOES.map((op) => {
                   const marcado = operacoes.includes(op);
                   return (
-                    <button
+                    <Button
                       key={op}
                       type="button"
+                      aria-pressed={marcado}
                       onClick={() =>
                         setOperacoes(
                           marcado ? operacoes.filter((o) => o !== op) : [...operacoes, op],
@@ -220,12 +232,12 @@ function Lancamento() {
                       className={`btn-base ${marcado ? "btn-primary" : "btn-ghost"}`}
                     >
                       {op}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
             </div>
-          </div>
+          </fieldset>
 
           {erros.length > 0 && (
             <ul className="mt-6 space-y-1 rounded-md border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
@@ -242,12 +254,13 @@ function Lancamento() {
           )}
 
           <div className="mt-7 flex flex-wrap gap-3">
-            <button className="btn-base btn-primary" disabled={mutation.isPending}>
+            <Button type="submit" className="btn-base btn-primary h-auto" disabled={mutation.isPending}>
               {mutation.isPending ? "Lançando…" : "Lançar dados"}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="btn-base btn-ghost"
+              className="btn-base btn-ghost h-auto"
+              disabled={mutation.isPending}
               onClick={() => {
                 setForm(vazio);
                 setOperacoes([]);
@@ -256,7 +269,7 @@ function Lancamento() {
               }}
             >
               Limpar
-            </button>
+            </Button>
           </div>
         </form>
 
@@ -296,6 +309,28 @@ function Lancamento() {
           </div>
         </aside>
       </div>
+      <AlertDialog open={confirmarAtraso} onOpenChange={(aberto) => { if (!mutation.isPending) setConfirmarAtraso(aberto); }}>
+        <AlertDialogContent className="w-[calc(100%-2rem)] max-w-lg rounded-lg bg-surface p-6">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-3 text-left">
+              <AlertTriangle className="size-6 shrink-0 text-warning" /> Lançamento fora do horário
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-left text-base leading-relaxed">
+              Atenção: o ferrolho selecionado está sendo lançado fora do horário de medição previsto na escala ativa. Deseja confirmar o lançamento mesmo assim?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <p className="break-words text-sm leading-relaxed text-muted-foreground">
+            Célula {form.celula} · {form.operador}
+          </p>
+          {erros.length > 0 && <p role="alert" className="text-sm text-destructive">{erros.join(" ")}</p>}
+          <AlertDialogFooter className="gap-3">
+            <Button variant="outline" disabled={mutation.isPending} onClick={() => { setConfirmarAtraso(false); setErros([]); }}>Cancelar</Button>
+            <Button className="btn-primary h-auto whitespace-normal" disabled={mutation.isPending} onClick={() => mutation.mutate(true)}>
+              {mutation.isPending ? "Lançando…" : "Confirmar lançamento"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }
