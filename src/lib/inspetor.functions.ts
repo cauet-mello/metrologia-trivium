@@ -157,7 +157,27 @@ export const listarAlteracoes = createServerFn({ method: "GET" }).handler(async 
     .order("created_at", { ascending: false })
     .limit(300);
   if (error) throw new Error(error.message);
-  return data;
+  // Recover legacy UUID-only references from safe snapshots, without changing audit rows.
+  const nomes = new Map<string, string>();
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return [...data].reverse().map((evento) => {
+    const tabela = evento.tipo.startsWith("Remoção em ") || evento.tipo.startsWith("Edição em ")
+      ? evento.tipo.split(" em ")[1] : evento.tipo === "Troca de senha de inspetor" ? "inspetores" : null;
+    if (!tabela) return evento;
+    for (const valor of [evento.anterior, evento.novo]) {
+      if (!valor?.startsWith("{")) continue;
+      try {
+        const snapshot = JSON.parse(valor);
+        if (snapshot && typeof snapshot.id === "string" &&
+          (typeof snapshot.nome === "string" || typeof snapshot.numero === "number")) {
+          nomes.set(`${tabela}:${snapshot.id}`, JSON.stringify({ nome: snapshot.nome, numero: snapshot.numero }));
+        }
+      } catch { /* Preserve legacy plain-text entries. */ }
+    }
+    const resolver = (valor: string | null) => valor && uuid.test(valor)
+      ? nomes.get(`${tabela}:${valor}`) ?? "Cadastro antigo · nome indisponível" : valor;
+    return { ...evento, anterior: resolver(evento.anterior), novo: resolver(evento.novo) };
+  }).reverse();
 });
 
 // ---------- Cadastros ----------
@@ -274,9 +294,12 @@ export const removerItem = createServerFn({ method: "POST" })
         .eq("ativo", true);
       if ((count ?? 0) <= 1) throw new Error("Mantenha pelo menos um inspetor cadastrado.");
     }
+    const colunas = data.tabela === "modelos" ? "id, nome, codigo" : data.tabela === "celulas" ? "id, numero" : "id, nome";
+    const { data: anterior, error: leitura } = await db.from(data.tabela).select(colunas).eq("id", data.id).single();
+    if (leitura || !anterior) throw new Error("Cadastro não encontrado. Atualize a página e tente novamente.");
     const { error } = await db.from(data.tabela).delete().eq("id", data.id);
     if (error) throw new Error(error.message);
-    await registrarAlteracao(nome, `Remoção em ${data.tabela}`, null, data.id, null);
+    await registrarAlteracao(nome, `Remoção em ${data.tabela}`, null, JSON.stringify(anterior), null);
     return { ok: true as const };
   });
 
@@ -308,12 +331,14 @@ export const trocarSenhaInspetor = createServerFn({ method: "POST" })
     const quem = await exigirInspetor();
     if ((data.senha ?? "").length < 6) throw new Error("A senha precisa ter ao menos 6 caracteres.");
     const db = await admin();
+    const { data: inspetor, error: leitura } = await db.from("inspetores").select("id, nome").eq("id", data.id).single();
+    if (leitura || !inspetor) throw new Error("Inspetor não encontrado.");
     const { error } = await db
       .from("inspetores")
       .update({ senha_hash: gerarHash(data.senha) })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
-    await registrarAlteracao(quem, "Troca de senha de inspetor", null, data.id, null);
+    await registrarAlteracao(quem, "Troca de senha de inspetor", null, JSON.stringify(inspetor), null);
     return { ok: true as const };
   });
 
