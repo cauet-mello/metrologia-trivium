@@ -288,6 +288,20 @@ function Lista() {
 
 function mostrarValor(v: string | null) {
   if (!v) return "—";
+  if (v.trim().startsWith("{")) {
+    try {
+      const dados: unknown = JSON.parse(v);
+      if (dados && typeof dados === "object" && !Array.isArray(dados)) {
+        const campos: Record<string, string> = { nome: "Nome", codigo: "Código", numero: "Célula" };
+        const linhas = Object.entries(dados)
+          .filter(([campo, valor]) => campo in campos && (typeof valor === "string" || typeof valor === "number"))
+          .map(([campo, valor]) => `${campos[campo]}: ${valor}`);
+        if (linhas.length) return linhas.join("\n");
+      }
+    } catch {
+      // Older audit entries can contain plain text; preserve their display.
+    }
+  }
   return /^\d{4}-\d\d-\d\dT/.test(v) ? `${formatarData(v)} ${formatarHora(v)}` : v;
 }
 
@@ -307,10 +321,10 @@ function Historico() {
       </div>
       {error && <p role="alert" className="mt-4 text-destructive">Não foi possível consultar o histórico. {error.message}</p>}
       <div className="mt-5 max-h-96 overflow-auto rounded-md border border-border" role="region" aria-label="Histórico de Alterações" tabIndex={0}>
-        <table className="w-full min-w-[1100px] table-fixed text-left text-sm">
+        <table className="w-full min-w-[1500px] table-fixed text-left text-sm">
           <thead className="sticky top-0 bg-surface text-xs uppercase text-muted-foreground">
             <tr>
-              <th className="w-40">Data / hora</th><th className="w-44">Responsável</th><th className="w-24">Perfil</th><th className="w-40">Tipo</th><th className="w-24">Registro</th><th>Anterior</th><th>Novo</th><th className="w-64">Observações</th>
+              <th className="w-40">Data / hora</th><th className="w-44">Responsável</th><th className="w-24">Perfil</th><th className="w-40">Tipo</th><th className="w-24">Registro</th><th className="w-56">Anterior</th><th className="w-56">Novo</th><th className="w-64">Observações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/60">
@@ -321,8 +335,8 @@ function Historico() {
                 <td>{a.perfil}</td>
                 <td>{a.tipo}</td>
                 <td>{a.registro_id ? `#${a.registro_id}` : "—"}</td>
-                <td>{mostrarValor(a.status_anterior ?? a.anterior)}</td>
-                <td>{mostrarValor(a.status_novo ?? a.novo)}{a.status_novo && a.novo && <p className="mt-2 text-muted-foreground">{a.novo}</p>}</td>
+                <td className="whitespace-pre-wrap">{mostrarValor(a.status_anterior ?? a.anterior)}</td>
+                <td className="whitespace-pre-wrap">{mostrarValor(a.status_novo ?? a.novo)}{a.status_novo && a.novo && <p className="mt-2 text-muted-foreground">{mostrarValor(a.novo)}</p>}</td>
                 <td className="whitespace-pre-wrap">{a.observacoes || "—"}</td>
               </tr>
             ))}
