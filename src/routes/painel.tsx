@@ -174,7 +174,7 @@ function Painel() {
           </ul>
         </section>
 
-        <section className="panel p-5 lg:col-span-2">
+        <section className="min-w-0 p-2 lg:col-span-2">
           <h2 className="font-display text-lg font-bold">Registros do Dia</h2>
           {erroSaida && (
             <p className="mt-3 rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
@@ -184,21 +184,21 @@ function Painel() {
           {isPending ? (
             <p className="mt-4 text-sm text-muted-foreground">Carregando…</p>
           ) : (
-            <div className="mt-4 max-h-72 overflow-y-auto pr-1">
-            <table className="w-full text-left text-sm">
-              <thead className="text-xs uppercase text-muted-foreground">
+            <div className="mt-4 max-h-72 overflow-auto rounded-md border border-border" role="region" aria-label="Registros do Dia" tabIndex={0}>
+            <table className="w-full min-w-[980px] text-left text-sm">
+              <thead className="sticky top-0 bg-surface text-xs uppercase text-muted-foreground">
                 <tr>
-                  <th className="py-2">Modelo</th><th>Cél.</th><th>Operador</th><th>Operação</th><th>Entrada</th><th>Saída</th><th>Permanência</th>
+                  <th>Modelo</th><th>Cél.</th><th>Operador</th><th>Operação</th><th>Entrada</th><th>Saída</th><th>Permanência</th><th>Atraso</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
                 {doDia.map((r) => (
-                  <tr key={r.id}>
-                    <td className="py-2">{r.modelo}</td>
+                  <tr key={r.id} className="align-top">
+                    <td className="min-w-48">{r.modelo}</td>
                     <td>{r.celula}</td>
-                    <td>{r.operador}</td>
+                    <td className="min-w-44">{r.operador}</td>
                     <td>{r.operacao}</td>
-                    <td>{formatarData(r.hora_entrada)} {formatarHora(r.hora_entrada)}</td>
+                    <td className="whitespace-nowrap">{formatarData(r.hora_entrada)}<br />{formatarHora(r.hora_entrada)}</td>
                     <td>
                       {!r.hora_saida ? (
                         <span className="chip">Aberto</span>
@@ -212,6 +212,7 @@ function Painel() {
                     <td>{r.atraso && <span className="chip border-destructive/50 text-destructive">Atraso</span>}</td>
                   </tr>
                 ))}
+                {doDia.length === 0 && <tr><td colSpan={8} className="text-muted-foreground">Nenhum registro neste dia.</td></tr>}
               </tbody>
             </table>
             </div>
