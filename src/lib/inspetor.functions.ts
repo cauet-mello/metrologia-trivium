@@ -96,22 +96,17 @@ export const sairInspetor = createServerFn({ method: "POST" }).handler(async () 
 });
 
 export const fecharRegistro = createServerFn({ method: "POST" })
-  .inputValidator((data: { id: number; observacoes?: string; atraso?: boolean }) => data)
+  .inputValidator((input) => z.object({ id: z.number().int().positive(), observacoes: z.string().max(10000).optional(), atraso: z.boolean().optional() }).parse(input))
   .handler(async ({ data }) => {
     const nome = await exigirInspetor();
     const db = await admin();
-    const { data: reg } = await db.from("registros").select("atraso").eq("id", data.id).single();
-    const { error } = await db
-      .from("registros")
-      .update({
-        hora_saida: new Date().toISOString(),
-        observacoes: data.observacoes?.trim() || null,
-        atraso: data.atraso === true || reg?.atraso === true,
-      })
-      .eq("id", data.id)
-      .is("hora_saida", null);
+    const { error } = await db.rpc("fechar_ferrolho", {
+      p_id: data.id,
+      p_inspetor: nome,
+      p_observacoes: data.observacoes ?? "",
+      p_atraso: data.atraso === true,
+    });
     if (error) throw new Error(error.message);
-    await registrarAlteracao(nome, "Fechamento", data.id, null, data.atraso ? "Atraso manual" : null);
     return { ok: true as const };
   });
 

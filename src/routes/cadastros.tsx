@@ -92,8 +92,8 @@ function Lista({ itens, tabela }: { itens: { id: string; texto: string; nome?: s
   return (
     <ul className="mt-4 max-h-[28rem] divide-y divide-border/60 overflow-y-auto">
       {itens.map((i) => (
-        <li key={i.id} className="flex items-center gap-2 py-2 text-sm">
-          <span className="mr-auto min-w-0 break-words">{i.texto}</span>
+        <li key={i.id} className="flex flex-wrap items-center gap-3 py-3 text-sm leading-relaxed">
+          <span className="mr-auto min-w-0 flex-1 basis-40 break-words">{i.texto}</span>
           <EditarCadastro tabela={tabela} item={i} />
           <button
             className="text-xs text-muted-foreground hover:text-destructive"

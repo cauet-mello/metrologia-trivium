@@ -44,16 +44,16 @@ function Fila() {
             const min = duracaoMinutos(r.hora_entrada);
             return (
               <div key={r.id} className={`panel p-5 ${i === 0 ? "ring-2 ring-accent" : ""}`}>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <span className="font-display text-4xl font-bold text-accent">#{i + 1}</span>
                   <span className="chip">{r.status}</span>
                 </div>
-                <p className="mt-3 font-display text-xl font-bold">{r.modelo}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-4 break-words font-display text-xl font-bold">{r.modelo}</p>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                   Célula {r.celula} · {r.operacao} · Turno {r.turno}
                 </p>
-                <p className="mt-1 text-sm">{r.operador}</p>
-                <div className="mt-4 flex justify-between text-sm">
+                <p className="mt-2 text-sm leading-relaxed">{r.operador}</p>
+                <div className="mt-5 flex flex-wrap justify-between gap-3 text-sm">
                   <span className="text-muted-foreground">Entrada {formatarHora(r.hora_entrada)}</span>
                   <span className={min > 60 ? "font-semibold text-destructive" : "font-semibold"}>
                     {formatarDuracao(r.hora_entrada)}
