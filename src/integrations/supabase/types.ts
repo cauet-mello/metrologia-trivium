@@ -21,8 +21,11 @@ export type Database = {
           id: number
           inspetor: string
           novo: string | null
+          observacoes: string | null
           perfil: string
           registro_id: number | null
+          status_anterior: string | null
+          status_novo: string | null
           tipo: string
         }
         Insert: {
@@ -31,8 +34,11 @@ export type Database = {
           id?: number
           inspetor: string
           novo?: string | null
+          observacoes?: string | null
           perfil?: string
           registro_id?: number | null
+          status_anterior?: string | null
+          status_novo?: string | null
           tipo: string
         }
         Update: {
@@ -41,8 +47,11 @@ export type Database = {
           id?: number
           inspetor?: string
           novo?: string | null
+          observacoes?: string | null
           perfil?: string
           registro_id?: number | null
+          status_anterior?: string | null
+          status_novo?: string | null
           tipo?: string
         }
         Relationships: []
@@ -200,6 +209,8 @@ export type Database = {
       registros: {
         Row: {
           atraso: boolean
+          atraso_confirmado: boolean
+          atraso_confirmado_em: string | null
           celula: number
           created_at: string
           fila: string | null
@@ -216,6 +227,8 @@ export type Database = {
         }
         Insert: {
           atraso?: boolean
+          atraso_confirmado?: boolean
+          atraso_confirmado_em?: string | null
           celula: number
           created_at?: string
           fila?: string | null
@@ -232,6 +245,8 @@ export type Database = {
         }
         Update: {
           atraso?: boolean
+          atraso_confirmado?: boolean
+          atraso_confirmado_em?: string | null
           celula?: number
           created_at?: string
           fila?: string | null
@@ -289,7 +304,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      fechar_ferrolho: {
+        Args: {
+          p_atraso?: boolean
+          p_id: number
+          p_inspetor: string
+          p_observacoes?: string
+        }
+        Returns: undefined
+      }
+      lancamento_em_atraso: {
+        Args: { p_celula: number; p_hora?: string }
+        Returns: boolean
+      }
+      lancar_ferrolho: {
+        Args: { p_confirmado?: boolean; p_dados: Json }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

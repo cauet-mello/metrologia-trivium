@@ -29,6 +29,13 @@
       "when": 1791294548848,
       "tag": "0003_inspetores_cadastros_escalas",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792081992628,
+      "tag": "0004_confirmacao_atraso_historico_fechamento",
+      "breakpoints": true
     }
   ]
 }
