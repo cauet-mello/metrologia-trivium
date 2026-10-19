@@ -36,6 +36,13 @@
       "when": 1792081992628,
       "tag": "0004_confirmacao_atraso_historico_fechamento",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792408041453,
+      "tag": "0005_reiniciar_numeracao_registros",
+      "breakpoints": true
     }
   ]
 }
