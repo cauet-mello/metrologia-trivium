@@ -1,0 +1,1 @@
+ALTER SEQUENCE public.registros_id_seq RESTART WITH 1;
