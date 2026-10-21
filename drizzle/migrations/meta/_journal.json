@@ -43,6 +43,13 @@
       "when": 1792408041453,
       "tag": "0005_reiniciar_numeracao_registros",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792584223068,
+      "tag": "0006_celulas_nome_exibicao",
+      "breakpoints": true
     }
   ]
 }
