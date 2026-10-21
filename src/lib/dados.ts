@@ -40,17 +40,29 @@ export const modelosQuery = {
   },
 };
 
+export type Celula = { id: string; numero: number; nome: string | null };
+
 export const celulasQuery = {
   queryKey: ["celulas"],
-  queryFn: async () => {
+  queryFn: async (): Promise<Celula[]> => {
     const { data, error } = await supabase
       .from("celulas")
-      .select("id, numero")
+      .select("id, numero, nome")
       .order("numero");
     if (error) throw error;
-    return data;
+    return data as Celula[];
   },
 };
+
+export function rotuloCelula(c: { numero: number; nome: string | null }) {
+  const nome = c.nome?.trim();
+  return nome ? nome : `Célula ${c.numero}`;
+}
+
+export function nomeDaCelula(celulas: Celula[] | undefined, numero: number) {
+  const c = celulas?.find((x) => x.numero === numero);
+  return c ? rotuloCelula(c) : `Célula ${numero}`;
+}
 
 export const abertosQuery = {
   queryKey: ["registros", "abertos"],

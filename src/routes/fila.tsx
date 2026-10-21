@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { abertosQuery } from "@/lib/dados";
+import { abertosQuery, celulasQuery, nomeDaCelula } from "@/lib/dados";
 import { duracaoMinutos, formatarDuracao, formatarHora } from "@/lib/constantes";
 
 export const Route = createFileRoute("/fila")({
@@ -22,6 +22,7 @@ export const Route = createFileRoute("/fila")({
 
 function Fila() {
   const { data = [], isPending } = useQuery({ ...abertosQuery, refetchInterval: 30000 });
+  const celulas = useQuery(celulasQuery);
   const [, tick] = useState(0);
   useEffect(() => {
     const t = setInterval(() => tick((n) => n + 1), 30000);
@@ -50,7 +51,7 @@ function Fila() {
                 </div>
                 <p className="mt-4 break-words font-display text-xl font-bold">{r.modelo}</p>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                  Célula {r.celula} · {r.operacao} · Turno {r.turno}
+                  {nomeDaCelula(celulas.data, r.celula)} · {r.operacao} · Turno {r.turno}
                 </p>
                 <p className="mt-2 text-sm leading-relaxed">{r.operador}</p>
                 <div className="mt-5 flex flex-wrap justify-between gap-3 text-sm">

@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { usePortaoInspetor } from "@/components/PortaoInspetor";
-import { historicoQuery, type Registro } from "@/lib/dados";
+import { celulasQuery, historicoQuery, nomeDaCelula, type Registro } from "@/lib/dados";
 import { alterarSaida, statusInspetor } from "@/lib/inspetor.functions";
 import { duracaoMinutos, formatarData, formatarDuracao, formatarHora } from "@/lib/constantes";
 import { exportarPlanilha } from "@/lib/exportar";
@@ -30,6 +30,7 @@ function hojeISO() {
 
 function Painel() {
   const { data = [], isPending } = useQuery({ ...historicoQuery, refetchInterval: 60000 });
+  const celulas = useQuery(celulasQuery);
   const [dia, setDia] = useState(hojeISO());
   const [erroSaida, setErroSaida] = useState<string | null>(null);
   const [datasExport, setDatasExport] = useState<string[]>([]);
@@ -164,7 +165,9 @@ function Painel() {
           <ul className="mt-4 space-y-2">
             {porCelula.map(([cel, n]) => (
               <li key={cel} className="flex items-center gap-3 text-sm">
-                <span className="w-16 text-muted-foreground">Cél. {cel}</span>
+                <span className="w-32 min-w-0 truncate text-muted-foreground" title={nomeDaCelula(celulas.data, cel)}>
+                  {nomeDaCelula(celulas.data, cel)}
+                </span>
                 <div className="h-3 flex-1 rounded bg-surface-2">
                   <div className="h-3 rounded bg-accent" style={{ width: `${(n / maxCel) * 100}%` }} />
                 </div>
@@ -195,7 +198,7 @@ function Painel() {
                 {doDia.map((r) => (
                   <tr key={r.id} className="align-top">
                     <td className="min-w-48">{r.modelo}</td>
-                    <td>{r.celula}</td>
+                    <td className="min-w-36 whitespace-nowrap">{nomeDaCelula(celulas.data, r.celula)}</td>
                     <td className="min-w-44">{r.operador}</td>
                     <td>{r.operacao}</td>
                     <td className="whitespace-nowrap">{formatarData(r.hora_entrada)}<br />{formatarHora(r.hora_entrada)}</td>

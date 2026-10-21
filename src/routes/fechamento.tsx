@@ -6,7 +6,7 @@ import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { BotaoSairInspetor, PortaoInspetor } from "@/components/PortaoInspetor";
-import { abertosQuery, celulasQuery, operadoresQuery, statusQuery } from "@/lib/dados";
+import { abertosQuery, celulasQuery, nomeDaCelula, operadoresQuery, rotuloCelula, statusQuery } from "@/lib/dados";
 import { fecharRegistro, listarAlteracoes, moverFila } from "@/lib/inspetor.functions";
 import { filaZeiss, formatarData, formatarDuracao, formatarHora } from "@/lib/constantes";
 
@@ -111,7 +111,7 @@ function Lista() {
             <option value="">Todas</option>
             {celulas.data?.map((c) => (
               <option key={c.id} value={c.numero}>
-                Célula {c.numero}
+                {rotuloCelula(c)}
               </option>
             ))}
           </select>
@@ -227,7 +227,7 @@ function Lista() {
                   <span className="chip">#{r.id}</span>
                   <h3 className="mt-2 text-base font-bold">{r.modelo}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Célula {r.celula} · {r.turno}º turno · {r.operacao}
+                    {nomeDaCelula(celulas.data, r.celula)} · {r.turno}º turno · {r.operacao}
                   </p>
                   <p className="text-sm text-muted-foreground">{r.operador}</p>
                 </div>
