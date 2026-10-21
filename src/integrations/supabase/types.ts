@@ -63,6 +63,7 @@ export type Database = {
           id: string
           nome: string | null
           numero: number
+          numero_informado: boolean
         }
         Insert: {
           ativo?: boolean
@@ -70,6 +71,7 @@ export type Database = {
           id?: string
           nome?: string | null
           numero: number
+          numero_informado?: boolean
         }
         Update: {
           ativo?: boolean
@@ -77,6 +79,7 @@ export type Database = {
           id?: string
           nome?: string | null
           numero?: number
+          numero_informado?: boolean
         }
         Relationships: []
       }
