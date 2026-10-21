@@ -50,6 +50,13 @@
       "when": 1792584223068,
       "tag": "0006_celulas_nome_exibicao",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792584787650,
+      "tag": "0007_celulas_numero_opcional",
+      "breakpoints": true
     }
   ]
 }
