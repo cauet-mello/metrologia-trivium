@@ -61,18 +61,21 @@ export type Database = {
           ativo: boolean
           created_at: string
           id: string
+          nome: string | null
           numero: number
         }
         Insert: {
           ativo?: boolean
           created_at?: string
           id?: string
+          nome?: string | null
           numero: number
         }
         Update: {
           ativo?: boolean
           created_at?: string
           id?: string
+          nome?: string | null
           numero?: number
         }
         Relationships: []

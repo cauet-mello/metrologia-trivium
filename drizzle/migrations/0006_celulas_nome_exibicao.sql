@@ -1,0 +1,2 @@
+ALTER TABLE public.celulas ADD COLUMN IF NOT EXISTS nome text;
+COMMENT ON COLUMN public.celulas.nome IS 'Nome de exibição da célula (ex.: Brochadeira 47). Quando vazio, a interface mostra "Célula N".';

@@ -212,12 +212,14 @@ export const salvarModelo = createServerFn({ method: "POST" })
   });
 
 export const salvarCelula = createServerFn({ method: "POST" })
-  .inputValidator((data: { numero: number }) => data)
+  .inputValidator((data: { numero: number; nome?: string }) => data)
   .handler(async ({ data }) => {
     await exigirInspetor();
     if (!Number.isInteger(data.numero) || data.numero <= 0) throw new Error("Número inválido.");
+    const nome = (data.nome ?? "").trim();
+    if (nome.length > 60) throw new Error("O nome da célula deve ter no máximo 60 caracteres.");
     const db = await admin();
-    const { error } = await db.from("celulas").insert({ numero: data.numero });
+    const { error } = await db.from("celulas").insert({ numero: data.numero, nome: nome || null });
     if (error) throw erroDuplicado(error, "Essa célula já existe.");
     return { ok: true as const };
   });
@@ -254,18 +256,18 @@ export const editarCadastro = createServerFn({ method: "POST" })
   .inputValidator((input) => z.discriminatedUnion("tabela", [
     z.object({ tabela: z.literal("operadores"), id: z.string().uuid(), nome: z.string().trim().min(3).max(200) }),
     z.object({ tabela: z.literal("modelos"), id: z.string().uuid(), nome: z.string().trim().min(3).max(200), codigo: z.number().int().positive() }),
-    z.object({ tabela: z.literal("celulas"), id: z.string().uuid(), numero: z.number().int().positive() }),
+    z.object({ tabela: z.literal("celulas"), id: z.string().uuid(), numero: z.number().int().positive(), nome: z.string().trim().max(60) }),
     z.object({ tabela: z.enum(["status_opcoes", "operacoes", "turnos"]), id: z.string().uuid(), nome: z.string().trim().min(1).max(200) }),
     z.object({ tabela: z.literal("inspetores"), id: z.string().uuid(), nome: z.string().trim().min(3).max(200) }),
   ]).parse(input))
   .handler(async ({ data }) => {
     const quem = await exigirInspetor();
     const db = await admin();
-    const colunas = data.tabela === "modelos" ? "id, nome, codigo" : data.tabela === "celulas" ? "id, numero" : "id, nome";
+    const colunas = data.tabela === "modelos" ? "id, nome, codigo" : data.tabela === "celulas" ? "id, numero, nome" : "id, nome";
     const { data: anterior, error: leitura } = await db.from(data.tabela).select(colunas).eq("id", data.id).single();
     if (leitura || !anterior) throw new Error("Cadastro não encontrado. Atualize a página e tente novamente.");
     const resultado = data.tabela === "celulas"
-      ? await db.from("celulas").update({ numero: data.numero }).eq("id", data.id).select("id, numero").single()
+      ? await db.from("celulas").update({ numero: data.numero, nome: data.nome.trim() || null }).eq("id", data.id).select("id, numero, nome").single()
       : data.tabela === "modelos"
         ? await db.from("modelos").update({ nome: data.nome.toUpperCase(), codigo: data.codigo }).eq("id", data.id).select("id, nome, codigo").single()
         : await db.from(data.tabela).update({ nome: ["operadores", "inspetores"].includes(data.tabela) ? data.nome.toUpperCase() : data.nome }).eq("id", data.id).select("id, nome").single();
@@ -294,7 +296,7 @@ export const removerItem = createServerFn({ method: "POST" })
         .eq("ativo", true);
       if ((count ?? 0) <= 1) throw new Error("Mantenha pelo menos um inspetor cadastrado.");
     }
-    const colunas = data.tabela === "modelos" ? "id, nome, codigo" : data.tabela === "celulas" ? "id, numero" : "id, nome";
+    const colunas = data.tabela === "modelos" ? "id, nome, codigo" : data.tabela === "celulas" ? "id, numero, nome" : "id, nome";
     const { data: anterior, error: leitura } = await db.from(data.tabela).select(colunas).eq("id", data.id).single();
     if (leitura || !anterior) throw new Error("Cadastro não encontrado. Atualize a página e tente novamente.");
     const { error } = await db.from(data.tabela).delete().eq("id", data.id);

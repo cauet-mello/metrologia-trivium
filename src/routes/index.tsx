@@ -11,8 +11,10 @@ import {
   celulasQuery,
   lancarRegistro,
   modelosQuery,
+  nomeDaCelula,
   operadoresQuery,
   operacoesQuery,
+  rotuloCelula,
   statusQuery,
   turnosQuery,
 } from "@/lib/dados";
@@ -153,7 +155,7 @@ function Lancamento() {
                 <option value="">Selecione…</option>
                 {celulas.data?.map((c) => (
                   <option key={c.id} value={c.numero}>
-                    Célula {c.numero}
+                    {rotuloCelula(c)}
                   </option>
                 ))}
               </select>
@@ -295,7 +297,7 @@ function Lancamento() {
                 <li key={r.id} className="border-b border-border/60 pb-3 last:border-0">
                   <p className="text-sm font-semibold">{r.modelo}</p>
                   <p className="text-xs text-muted-foreground">
-                    Célula {r.celula} · {r.operador}
+                    {nomeDaCelula(celulas.data, r.celula)} · {r.operador}
                   </p>
                   <p className="mt-1 text-xs text-accent">
                     há {formatarDuracao(r.hora_entrada)} na fila
@@ -320,7 +322,7 @@ function Lancamento() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <p className="break-words text-sm leading-relaxed text-muted-foreground">
-            Célula {form.celula} · {form.operador}
+            {nomeDaCelula(celulas.data, Number(form.celula))} · {form.operador}
           </p>
           {erros.length > 0 && <p role="alert" className="text-sm text-destructive">{erros.join(" ")}</p>}
           <AlertDialogFooter className="gap-3">
