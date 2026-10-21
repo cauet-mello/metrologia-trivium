@@ -16,6 +16,7 @@ import {
   operadoresQuery,
   statusQuery,
   turnosQuery,
+  rotuloCelula,
 } from "@/lib/dados";
 import {
   definirEscalaAtiva,
@@ -88,7 +89,7 @@ function useAcao() {
   return { erro, ocupado, rodar };
 }
 
-function Lista({ itens, tabela }: { itens: { id: string; texto: string; nome?: string; codigo?: number; numero?: number; onRemover: () => void }[]; tabela: Tabela }) {
+function Lista({ itens, tabela }: { itens: { id: string; texto: string; nome?: string | null; codigo?: number; numero?: number; onRemover: () => void }[]; tabela: Tabela }) {
   return (
     <ul className="mt-4 max-h-[28rem] divide-y divide-border/60 overflow-y-auto">
       {itens.map((i) => (
@@ -109,7 +110,7 @@ function Lista({ itens, tabela }: { itens: { id: string; texto: string; nome?: s
 
 type Tabela = "operadores" | "modelos" | "celulas" | "status_opcoes" | "operacoes" | "turnos" | "inspetores";
 
-function EditarCadastro({ tabela, item }: { tabela: Tabela; item: { id: string; nome?: string; codigo?: number; numero?: number } }) {
+function EditarCadastro({ tabela, item }: { tabela: Tabela; item: { id: string; nome?: string | null; codigo?: number; numero?: number } }) {
   const salvar = useServerFn(editarCadastro);
   const qc = useQueryClient();
   const [aberto, setAberto] = useState(false);
@@ -128,7 +129,7 @@ function EditarCadastro({ tabela, item }: { tabela: Tabela; item: { id: string; 
         <form className="grid gap-4" onSubmit={async (e) => {
           e.preventDefault();
           const dados = tabela === "celulas"
-            ? { tabela, id: item.id, numero: Number(numero) } as const
+            ? { tabela, id: item.id, numero: Number(numero), nome } as const
             : tabela === "modelos"
               ? { tabela, id: item.id, nome, codigo: Number(numero) } as const
               : { tabela, id: item.id, nome };
@@ -145,6 +146,9 @@ function EditarCadastro({ tabela, item }: { tabela: Tabela; item: { id: string; 
           </label>}
           {(tabela === "modelos" || tabela === "celulas") && <label className="grid gap-2 text-sm">{tabela === "modelos" ? "Código" : "Número da célula"}
             <input className="control" type="number" required min={1} step={1} value={numero} disabled={ocupado} onChange={(e) => setNumero(e.target.value)} />
+          </label>}
+          {tabela === "celulas" && <label className="grid gap-2 text-sm">Nome (opcional)
+            <input className="control" maxLength={60} placeholder="Ex.: Brochadeira 47" value={nome} disabled={ocupado} onChange={(e) => setNome(e.target.value)} />
           </label>}
           {erro && <p role="alert" className="text-sm text-destructive">{erro}</p>}
           <DialogFooter className="gap-2">
@@ -354,21 +358,28 @@ function Celulas() {
   const remover = useRemover();
   const { erro, ocupado, rodar } = useAcao();
   const [numero, setNumero] = useState("");
+  const [nome, setNome] = useState("");
   return (
     <section className="panel p-5">
       <h2 className="font-display text-lg font-bold">Células <span className="chip ml-2">{data.length}</span></h2>
       <form
-        className="mt-4 flex gap-2"
+        className="mt-4 flex flex-col gap-2"
         onSubmit={async (e) => {
           e.preventDefault();
-          if (await rodar(() => salvar({ data: { numero: Number(numero) } }), "celulas")) setNumero("");
+          if (await rodar(() => salvar({ data: { numero: Number(numero), nome } }), "celulas")) {
+            setNumero("");
+            setNome("");
+          }
         }}
       >
-        <input className="control" placeholder="Número da célula" inputMode="numeric" value={numero} onChange={(e) => setNumero(e.target.value)} />
-        <button className="btn-base btn-primary" disabled={ocupado || !numero}>Adicionar</button>
+        <input className="control" placeholder="Nome (ex.: Brochadeira 47)" value={nome} onChange={(e) => setNome(e.target.value)} />
+        <div className="flex gap-2">
+          <input className="control" placeholder="Número da célula" inputMode="numeric" value={numero} onChange={(e) => setNumero(e.target.value)} />
+          <button className="btn-base btn-primary" disabled={ocupado || !numero}>Adicionar</button>
+        </div>
       </form>
       {erro && <p className="mt-2 text-sm text-destructive">{erro}</p>}
-      <Lista tabela="celulas" itens={data.map((c) => ({ ...c, texto: `Célula ${c.numero}`, onRemover: () => rodar(() => remover("celulas", c.id), "celulas") }))} />
+      <Lista tabela="celulas" itens={data.map((c) => ({ ...c, texto: rotuloCelula(c), onRemover: () => rodar(() => remover("celulas", c.id), "celulas") }))} />
     </section>
   );
 }
