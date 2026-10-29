@@ -28,6 +28,22 @@ export function AppShell({
 }) {
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [claro, setClaro] = useState(false);
+
+  useEffect(() => {
+    setClaro(document.documentElement.classList.contains("light"));
+  }, []);
+
+  function alternarTema() {
+    const novo = !claro;
+    setClaro(novo);
+    document.documentElement.classList.replace(novo ? "dark" : "light", novo ? "light" : "dark");
+    try {
+      localStorage.setItem("trivium-tema", novo ? "claro" : "escuro");
+    } catch {
+      /* armazenamento indisponível */
+    }
+  }
 
   useEffect(() => {
     const channel = supabase
@@ -56,6 +72,16 @@ export function AppShell({
               <p className="font-display text-base font-bold">Controle Tridimensional · Zeiss</p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={alternarTema}
+            className="btn-base btn-ghost"
+            aria-label={claro ? "Ativar modo escuro" : "Ativar modo claro"}
+            title={claro ? "Ativar modo escuro" : "Ativar modo claro"}
+          >
+            {claro ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            {claro ? "Escuro" : "Claro"}
+          </button>
           <nav className="flex flex-wrap gap-2" aria-label="Navegação principal">
             {NAV.map((item) => {
               const ativo = pathname === item.to;
