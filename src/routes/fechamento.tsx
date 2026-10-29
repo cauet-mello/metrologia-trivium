@@ -213,7 +213,7 @@ function Lista() {
               <div className="mb-3 flex justify-end">
                 <Button
                   type="button"
-                  className="btn-base btn-ghost h-auto whitespace-normal px-3 py-2 text-xs"
+                  className="btn-base btn-ghost h-auto whitespace-normal px-3 py-2 text-xs text-foreground"
                   disabled={mover.isPending}
                   onClick={() =>
                     mover.mutate({ id: r.id, fila: fila.nome === "Zeiss 1" ? "Zeiss 2" : "Zeiss 1" })

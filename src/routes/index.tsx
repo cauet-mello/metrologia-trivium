@@ -189,7 +189,7 @@ function Lancamento() {
                     type="button"
                     aria-pressed={form.turno === t}
                     onClick={() => setForm({ ...form, turno: t })}
-                    className={`btn-base flex-1 ${form.turno === t ? "btn-primary" : "btn-ghost"}`}
+                    className={`btn-base flex-1 ${form.turno === t ? "btn-primary" : "btn-ghost text-foreground"}`}
                   >
                     {t}º
                   </Button>
@@ -231,7 +231,7 @@ function Lancamento() {
                           marcado ? operacoes.filter((o) => o !== op) : [...operacoes, op],
                         )
                       }
-                      className={`btn-base ${marcado ? "btn-primary" : "btn-ghost"}`}
+                      className={`btn-base ${marcado ? "btn-primary" : "btn-ghost text-foreground"}`}
                     >
                       {op}
                     </Button>
@@ -261,7 +261,7 @@ function Lancamento() {
             </Button>
             <Button
               type="button"
-              className="btn-base btn-ghost h-auto"
+              className="btn-base btn-ghost h-auto text-foreground"
               disabled={mutation.isPending}
               onClick={() => {
                 setForm(vazio);
