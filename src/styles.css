@@ -2,11 +2,12 @@
 @source "../src";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark, .dark *));
 
 /*
  * Design system Trivium — Controle de Ferrolhos (Qualidade / Tridimensional)
  * Azul industrial + amarelo Trivium. Todas as cores em oklch.
+ * Escuro (padrão) em :root; claro em .light.
  */
 
 @theme inline {
@@ -65,6 +66,34 @@
   --warning-foreground: oklch(0.2 0.04 258);
   --destructive: oklch(0.62 0.2 25);
   --destructive-foreground: oklch(0.98 0.005 255);
+  --bg-glow-1: oklch(0.3 0.05 258 / 0.85);
+  --bg-glow-2: oklch(0.4 0.08 78 / 0.14);
+}
+
+.light {
+  --background: oklch(0.97 0.008 258);
+  --foreground: oklch(0.22 0.03 258);
+  --surface: oklch(0.99 0.004 258);
+  --surface-2: oklch(0.94 0.012 258);
+  --card: oklch(0.99 0.004 258);
+  --card-foreground: oklch(0.22 0.03 258);
+  --primary: oklch(0.44 0.078 256);
+  --primary-foreground: oklch(0.98 0.005 255);
+  --accent: oklch(0.78 0.132 78);
+  --accent-foreground: oklch(0.22 0.04 258);
+  --muted: oklch(0.93 0.012 258);
+  --muted-foreground: oklch(0.45 0.03 258);
+  --border: oklch(0.86 0.015 258);
+  --input: oklch(0.96 0.01 258);
+  --ring: oklch(0.7 0.13 78);
+  --success: oklch(0.68 0.15 150);
+  --success-foreground: oklch(0.17 0.03 258);
+  --warning: oklch(0.8 0.15 70);
+  --warning-foreground: oklch(0.2 0.04 258);
+  --destructive: oklch(0.6 0.2 25);
+  --destructive-foreground: oklch(0.98 0.005 255);
+  --bg-glow-1: oklch(0.88 0.03 258 / 0.7);
+  --bg-glow-2: oklch(0.85 0.1 78 / 0.25);
 }
 
 @layer base {
@@ -74,8 +103,8 @@
 
   body {
     background:
-      radial-gradient(1100px 620px at 15% -10%, oklch(0.3 0.05 258 / 0.85), transparent 60%),
-      radial-gradient(800px 500px at 100% 0%, oklch(0.4 0.08 78 / 0.14), transparent 60%),
+      radial-gradient(1100px 620px at 15% -10%, var(--bg-glow-1), transparent 60%),
+      radial-gradient(800px 500px at 100% 0%, var(--bg-glow-2), transparent 60%),
       var(--color-background);
     background-attachment: fixed;
     color: var(--color-foreground);

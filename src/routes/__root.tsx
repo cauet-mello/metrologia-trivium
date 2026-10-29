@@ -95,9 +95,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" className="dark">
       <head>
         <HeadContent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('trivium-tema')==='claro')document.documentElement.classList.replace('dark','light')}catch(e){}",
+          }}
+        />
       </head>
       <body>
         {children}
