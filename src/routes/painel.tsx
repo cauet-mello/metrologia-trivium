@@ -158,7 +158,7 @@ function Painel() {
         <Kpi rotulo="Tempo médio" valor={media >= 60 ? `${Math.floor(media / 60)}h ${media % 60}min` : `${media}min`} />
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-3">
+      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
         <section className="panel p-5">
           <h2 className="font-display text-lg font-bold">Lançamentos por Célula</h2>
           {porCelula.length === 0 && <p className="mt-4 text-sm text-muted-foreground">Sem lançamentos neste dia.</p>}
@@ -177,7 +177,7 @@ function Painel() {
           </ul>
         </section>
 
-        <section className="min-w-0 p-2 lg:col-span-2">
+        <section className="min-w-0 p-2">
           <h2 className="font-display text-lg font-bold">Registros do Dia</h2>
           {erroSaida && (
             <p className="mt-3 rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
@@ -187,34 +187,47 @@ function Painel() {
           {isPending ? (
             <p className="mt-4 text-sm text-muted-foreground">Carregando…</p>
           ) : (
-            <div className="mt-4 max-h-72 overflow-auto rounded-md border border-border" role="region" aria-label="Registros do Dia" tabIndex={0}>
-            <table className="w-full min-w-[980px] text-left text-sm">
+            <div className="mt-4 max-h-80 overflow-auto rounded-md border border-border" role="region" aria-label="Registros do Dia" tabIndex={0}>
+            <table className="tabela-densa w-full min-w-[900px] table-fixed text-left text-sm [overflow-wrap:normal]">
               <thead className="sticky top-0 bg-surface text-xs uppercase text-muted-foreground">
                 <tr>
-                  <th>Modelo</th><th>Cél.</th><th>Operador</th><th>Operação</th><th>Entrada</th><th>Saída</th><th>Permanência</th><th>Atraso</th>
+                  <th className="w-[19%] whitespace-nowrap">Modelo</th>
+                  <th className="w-[11%] whitespace-nowrap">Cél.</th>
+                  <th className="w-[13%] whitespace-nowrap">Operador</th>
+                  <th className="w-[10%] whitespace-nowrap">Operação</th>
+                  <th className="w-[16%] whitespace-nowrap">Entrada</th>
+                  <th className="w-[13%] whitespace-nowrap">Saída</th>
+                  <th className="w-[12%] whitespace-nowrap">Permanência</th>
+                  <th className="w-[6%] whitespace-nowrap">Atraso</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {doDia.map((r) => (
-                  <tr key={r.id} className="align-top">
-                    <td className="min-w-48">{r.modelo}</td>
-                    <td className="min-w-36 whitespace-nowrap">{nomeDaCelula(celulas.data, r.celula)}</td>
-                    <td className="min-w-44">{r.operador}</td>
-                    <td>{r.operacao}</td>
-                    <td className="whitespace-nowrap">{formatarData(r.hora_entrada)}<br />{formatarHora(r.hora_entrada)}</td>
-                    <td>
+                {doDia.map((r) => {
+                  const cel = nomeDaCelula(celulas.data, r.celula);
+                  return (
+                  <tr key={r.id}>
+                    <td className="truncate" title={r.modelo}>{r.modelo}</td>
+                    <td className="truncate" title={cel}>{cel}</td>
+                    <td className="truncate" title={r.operador}>{r.operador}</td>
+                    <td className="whitespace-nowrap">{r.operacao}</td>
+                    <td className="whitespace-nowrap tabular-nums">
+                      {formatarData(r.hora_entrada)}{" "}
+                      <span className="text-xs text-muted-foreground">{formatarHora(r.hora_entrada)}</span>
+                    </td>
+                    <td className="whitespace-nowrap">
                       {!r.hora_saida ? (
                         <span className="chip">Aberto</span>
                       ) : liberado ? (
                         <SaidaEditavel r={r} onErro={setErroSaida} />
                       ) : (
-                        formatarHora(r.hora_saida)
+                        <span className="tabular-nums">{formatarHora(r.hora_saida)}</span>
                       )}
                     </td>
-                    <td>{formatarDuracao(r.hora_entrada, r.hora_saida)}</td>
+                    <td className="whitespace-nowrap tabular-nums">{formatarDuracao(r.hora_entrada, r.hora_saida)}</td>
                     <td>{r.atraso && <span className="chip border-destructive/50 text-destructive">Atraso</span>}</td>
                   </tr>
-                ))}
+                  );
+                })}
                 {doDia.length === 0 && <tr><td colSpan={8} className="text-muted-foreground">Nenhum registro neste dia.</td></tr>}
               </tbody>
             </table>
@@ -252,7 +265,7 @@ function SaidaEditavel({ r, onErro }: { r: Registro; onErro: (m: string | null) 
     <input
       type="time"
       aria-label={`Horário de saída do registro ${r.id}`}
-      className="control w-28 px-2 py-1"
+      className="control w-24 px-1.5 py-1 tabular-nums"
       value={valor}
       onChange={(e) => setValor(e.target.value)}
       onBlur={confirmar}
