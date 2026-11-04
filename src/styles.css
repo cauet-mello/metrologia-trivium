@@ -221,7 +221,7 @@
 @utility tabela-densa {
   th,
   td {
-    padding: 0.5rem 0.6rem;
+    padding: 0.5rem 0.5rem;
     line-height: 1.4;
     overflow-wrap: normal;
   }

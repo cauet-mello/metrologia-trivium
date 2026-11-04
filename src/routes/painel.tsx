@@ -190,14 +190,14 @@ function Painel() {
             <table className="tabela-densa w-full min-w-[1080px] table-fixed text-left text-sm [overflow-wrap:normal]">
               <thead className="sticky top-0 bg-surface text-xs uppercase text-muted-foreground">
                 <tr>
-                  <th className="w-[23%] whitespace-nowrap">Modelo</th>
-                  <th className="w-[10%] whitespace-nowrap">Cél.</th>
-                  <th className="w-[17%] whitespace-nowrap">Operador</th>
-                  <th className="w-[13%] whitespace-nowrap">Operação</th>
-                  <th className="w-[11%] whitespace-nowrap">Entrada</th>
-                  <th className="w-[10%] whitespace-nowrap">Saída</th>
-                  <th className="w-[9%] whitespace-nowrap">Permanência</th>
-                  <th className="w-[7%] whitespace-nowrap">Atraso</th>
+                  <th className="w-[26%] whitespace-nowrap">Modelo</th>
+                  <th className="w-[9.7%] whitespace-nowrap">Cél.</th>
+                  <th className="w-[18.5%] whitespace-nowrap">Operador</th>
+                  <th className="w-[12.6%] whitespace-nowrap">Operação</th>
+                  <th className="w-[9.7%] whitespace-nowrap">Entrada</th>
+                  <th className="w-[8%] whitespace-nowrap">Saída</th>
+                  <th className="w-[8.7%] whitespace-nowrap">Permanência</th>
+                  <th className="w-[6.8%] whitespace-nowrap">Atraso</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
@@ -263,7 +263,7 @@ function SaidaEditavel({ r, onErro }: { r: Registro; onErro: (m: string | null) 
     <input
       type="time"
       aria-label={`Horário de saída do registro ${r.id}`}
-      className="control w-24 px-1.5 py-1 tabular-nums"
+      className="control w-20 px-1 py-1 tabular-nums"
       value={valor}
       onChange={(e) => setValor(e.target.value)}
       onBlur={confirmar}
