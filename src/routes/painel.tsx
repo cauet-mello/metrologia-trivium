@@ -158,8 +158,7 @@ function Painel() {
         <Kpi rotulo="Tempo médio" valor={media >= 60 ? `${Math.floor(media / 60)}h ${media % 60}min` : `${media}min`} />
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
-        <section className="panel p-5">
+      <section className="panel mt-5 p-5">
           <h2 className="font-display text-lg font-bold">Lançamentos por Célula</h2>
           {porCelula.length === 0 && <p className="mt-4 text-sm text-muted-foreground">Sem lançamentos neste dia.</p>}
           <ul className="mt-4 space-y-2">
@@ -175,9 +174,9 @@ function Painel() {
               </li>
             ))}
           </ul>
-        </section>
+      </section>
 
-        <section className="min-w-0 p-2">
+      <section className="mt-5 min-w-0 p-2">
           <h2 className="font-display text-lg font-bold">Registros do Dia</h2>
           {erroSaida && (
             <p className="mt-3 rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
@@ -187,18 +186,18 @@ function Painel() {
           {isPending ? (
             <p className="mt-4 text-sm text-muted-foreground">Carregando…</p>
           ) : (
-            <div className="mt-4 max-h-80 overflow-auto rounded-md border border-border" role="region" aria-label="Registros do Dia" tabIndex={0}>
-            <table className="tabela-densa w-full min-w-[900px] table-fixed text-left text-sm [overflow-wrap:normal]">
+            <div className="mt-4 max-h-[26rem] overflow-auto rounded-md border border-border" role="region" aria-label="Registros do Dia" tabIndex={0}>
+            <table className="tabela-densa w-full min-w-[1080px] table-fixed text-left text-sm [overflow-wrap:normal]">
               <thead className="sticky top-0 bg-surface text-xs uppercase text-muted-foreground">
                 <tr>
-                  <th className="w-[19%] whitespace-nowrap">Modelo</th>
-                  <th className="w-[11%] whitespace-nowrap">Cél.</th>
-                  <th className="w-[13%] whitespace-nowrap">Operador</th>
-                  <th className="w-[10%] whitespace-nowrap">Operação</th>
-                  <th className="w-[16%] whitespace-nowrap">Entrada</th>
-                  <th className="w-[13%] whitespace-nowrap">Saída</th>
-                  <th className="w-[12%] whitespace-nowrap">Permanência</th>
-                  <th className="w-[6%] whitespace-nowrap">Atraso</th>
+                  <th className="w-[23%] whitespace-nowrap">Modelo</th>
+                  <th className="w-[10%] whitespace-nowrap">Cél.</th>
+                  <th className="w-[17%] whitespace-nowrap">Operador</th>
+                  <th className="w-[13%] whitespace-nowrap">Operação</th>
+                  <th className="w-[11%] whitespace-nowrap">Entrada</th>
+                  <th className="w-[10%] whitespace-nowrap">Saída</th>
+                  <th className="w-[9%] whitespace-nowrap">Permanência</th>
+                  <th className="w-[7%] whitespace-nowrap">Atraso</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
@@ -233,8 +232,7 @@ function Painel() {
             </table>
             </div>
           )}
-        </section>
-      </div>
+      </section>
     </AppShell>
   );
 }
