@@ -224,14 +224,16 @@ export const salvarModelo = createServerFn({ method: "POST" })
   });
 
 export const salvarCelula = createServerFn({ method: "POST" })
-  .inputValidator((data: { numero: number; nome?: string }) => data)
+  .inputValidator((data: { numero?: number | null; nome?: string }) => data)
   .handler(async ({ data }) => {
     await exigirInspetor();
-    if (!Number.isInteger(data.numero) || data.numero <= 0) throw new Error("Número inválido.");
+    const semNumero = data.numero == null;
+    if (!semNumero && (!Number.isInteger(data.numero) || (data.numero as number) <= 0)) throw new Error("Número inválido.");
     const nome = (data.nome ?? "").trim();
     if (nome.length > 60) throw new Error("O nome da célula deve ter no máximo 60 caracteres.");
+    if (semNumero && !nome) throw new Error("Informe o nome ou o número da célula.");
     const db = await admin();
-    const { error } = await db.from("celulas").insert({ numero: data.numero, nome: nome || null });
+    const { error } = await db.from("celulas").insert({ numero: semNumero ? 0 : (data.numero as number), numero_informado: !semNumero, nome: nome || null });
     if (error) throw erroDuplicado(error, "Essa célula já existe.");
     return { ok: true as const };
   });
@@ -268,7 +270,7 @@ export const editarCadastro = createServerFn({ method: "POST" })
   .inputValidator((input) => z.discriminatedUnion("tabela", [
     z.object({ tabela: z.literal("operadores"), id: z.string().uuid(), nome: z.string().trim().min(3).max(200) }),
     z.object({ tabela: z.literal("modelos"), id: z.string().uuid(), nome: z.string().trim().min(3).max(200), codigo: z.number().int().positive() }),
-    z.object({ tabela: z.literal("celulas"), id: z.string().uuid(), numero: z.number().int().positive(), nome: z.string().trim().max(60) }),
+    z.object({ tabela: z.literal("celulas"), id: z.string().uuid(), numero: z.number().int(), nome: z.string().trim().max(60) }),
     z.object({ tabela: z.enum(["status_opcoes", "operacoes", "turnos"]), id: z.string().uuid(), nome: z.string().trim().min(1).max(200) }),
     z.object({ tabela: z.literal("inspetores"), id: z.string().uuid(), nome: z.string().trim().min(3).max(200) }),
   ]).parse(input))
@@ -279,7 +281,7 @@ export const editarCadastro = createServerFn({ method: "POST" })
     const { data: anterior, error: leitura } = await db.from(data.tabela).select(colunas).eq("id", data.id).single();
     if (leitura || !anterior) throw new Error("Cadastro não encontrado. Atualize a página e tente novamente.");
     const resultado = data.tabela === "celulas"
-      ? await db.from("celulas").update({ numero: data.numero, nome: data.nome.trim() || null }).eq("id", data.id).select("id, numero, nome").single()
+      ? await db.from("celulas").update(data.numero > 0 ? { numero: data.numero, numero_informado: true, nome: data.nome.trim() || null } : { numero_informado: false, nome: data.nome.trim() || null }).eq("id", data.id).select("id, numero, nome").single()
       : data.tabela === "modelos"
         ? await db.from("modelos").update({ nome: data.nome.toUpperCase(), codigo: data.codigo }).eq("id", data.id).select("id, nome, codigo").single()
         : await db.from(data.tabela).update({ nome: ["operadores", "inspetores"].includes(data.tabela) ? data.nome.toUpperCase() : data.nome }).eq("id", data.id).select("id, nome").single();

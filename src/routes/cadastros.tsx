@@ -144,7 +144,7 @@ function EditarCadastro({ tabela, item }: { tabela: Tabela; item: { id: string; 
           {tabela !== "celulas" && <label className="grid gap-2 text-sm">{tabela === "modelos" ? "Descrição" : "Nome"}
             <input className="control" required minLength={["operadores", "inspetores", "modelos"].includes(tabela) ? 3 : 1} maxLength={200} value={nome} disabled={ocupado} onChange={(e) => setNome(e.target.value)} />
           </label>}
-          {(tabela === "modelos" || tabela === "celulas") && <label className="grid gap-2 text-sm">{tabela === "modelos" ? "Código" : "Número da célula"}
+          {(tabela === "modelos" || (tabela === "celulas" && (item.numero ?? 0) > 0)) && <label className="grid gap-2 text-sm">{tabela === "modelos" ? "Código" : "Número da célula"}
             <input className="control" type="number" required min={1} step={1} value={numero} disabled={ocupado} onChange={(e) => setNumero(e.target.value)} />
           </label>}
           {tabela === "celulas" && <label className="grid gap-2 text-sm">Nome (opcional)
@@ -366,7 +366,7 @@ function Celulas() {
         className="mt-4 flex flex-col gap-2"
         onSubmit={async (e) => {
           e.preventDefault();
-          if (await rodar(() => salvar({ data: { numero: Number(numero), nome } }), "celulas")) {
+          if (await rodar(() => salvar({ data: { numero: numero.trim() ? Number(numero) : null, nome } }), "celulas")) {
             setNumero("");
             setNome("");
           }
@@ -374,8 +374,8 @@ function Celulas() {
       >
         <input className="control" placeholder="Nome (ex.: Brochadeira 47)" value={nome} onChange={(e) => setNome(e.target.value)} />
         <div className="flex gap-2">
-          <input className="control" placeholder="Número da célula" inputMode="numeric" value={numero} onChange={(e) => setNumero(e.target.value)} />
-          <button className="btn-base btn-primary" disabled={ocupado || !numero}>Adicionar</button>
+          <input className="control" placeholder="Número (opcional)" inputMode="numeric" value={numero} onChange={(e) => setNumero(e.target.value)} />
+          <button className="btn-base btn-primary" disabled={ocupado || (!numero.trim() && !nome.trim())}>Adicionar</button>
         </div>
       </form>
       {erro && <p className="mt-2 text-sm text-destructive">{erro}</p>}
