@@ -31,7 +31,8 @@ function hojeISO() {
 function Painel() {
   const { data = [], isPending } = useQuery({ ...historicoQuery, refetchInterval: 60000 });
   const celulas = useQuery(celulasQuery);
-  const [dia, setDia] = useState(hojeISO());
+  // "" = todos os dias: o painel mostra sempre o histórico inteiro de registros.
+  const [dia, setDia] = useState("");
   const [erroSaida, setErroSaida] = useState<string | null>(null);
   const [datasExport, setDatasExport] = useState<string[]>([]);
   const inspetor = usePortaoInspetor();
@@ -74,7 +75,7 @@ function Painel() {
   }, []);
 
   const doDia = useMemo(
-    () => data.filter((r) => new Date(r.hora_entrada).toLocaleDateString("sv-SE") === dia),
+    () => (dia ? data.filter((r) => new Date(r.hora_entrada).toLocaleDateString("sv-SE") === dia) : data),
     [data, dia],
   );
   const fechados = doDia.filter((r) => r.hora_saida);
@@ -99,16 +100,21 @@ function Painel() {
       titulo="Painel de Indicadores"
       descricao={liberado ? "Acompanhe o volume de medições e baixe a planilha atualizada." : "Acompanhe o volume de medições."}
       acao={
-        <div className="flex flex-wrap gap-2">
-          <input type="date" className="control w-auto" value={dia} onChange={(e) => setDia(e.target.value)} />
-          {liberado && <>
-          <button className="btn-base btn-ghost" onClick={() => gerarPlanilha(doDia)} disabled={gerando || !doDia.length}>
-            Planilha do dia
+        <div className="flex flex-wrap items-center gap-2">
+          <input type="date" className="control w-auto" value={dia} onChange={(e) => setDia(e.target.value)} aria-label="Filtrar registros por dia" />
+          <button type="button" className="btn-base btn-ghost text-foreground" onClick={() => setDia("")} disabled={!dia} title="Mostrar todos os dias">
+            Todos os dias
           </button>
-          <button className="btn-base btn-primary" onClick={() => gerarPlanilha(data)} disabled={gerando || !data.length}>
-            Planilha completa
-          </button>
-          </>}
+          {liberado && dia && (
+            <button className="btn-base btn-ghost text-foreground" onClick={() => gerarPlanilha(doDia)} disabled={gerando || !doDia.length}>
+              Planilha do dia
+            </button>
+          )}
+          {liberado && (
+            <button className="btn-base btn-primary" onClick={() => gerarPlanilha(data)} disabled={gerando || !data.length}>
+              Planilha completa
+            </button>
+          )}
         </div>
       }
     >
@@ -152,7 +158,7 @@ function Painel() {
         </button>
       </section>}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi rotulo="Lançamentos no dia" valor={doDia.length} />
+        <Kpi rotulo={dia ? "Lançamentos no dia" : "Lançamentos no total"} valor={doDia.length} />
         <Kpi rotulo="Medições concluídas" valor={fechados.length} />
         <Kpi rotulo="Aguardando agora" valor={abertos.length} destaque />
         <Kpi rotulo="Tempo médio" valor={media >= 60 ? `${Math.floor(media / 60)}h ${media % 60}min` : `${media}min`} />
@@ -160,7 +166,7 @@ function Painel() {
 
       <section className="panel mt-5 p-5">
           <h2 className="font-display text-lg font-bold">Lançamentos por Célula</h2>
-          {porCelula.length === 0 && <p className="mt-4 text-sm text-muted-foreground">Sem lançamentos neste dia.</p>}
+          {porCelula.length === 0 && <p className="mt-4 text-sm text-muted-foreground">{dia ? "Sem lançamentos neste dia." : "Sem lançamentos registrados."}</p>}
           <ul className="mt-4 space-y-2">
             {porCelula.map(([cel, n]) => (
               <li key={cel} className="flex items-center gap-3 text-sm">
@@ -177,7 +183,7 @@ function Painel() {
       </section>
 
       <section className="mt-5 min-w-0 p-2">
-          <h2 className="font-display text-lg font-bold">Registros do Dia</h2>
+          <h2 className="font-display text-lg font-bold">{dia ? "Registros do Dia" : "Todos os Registros"}</h2>
           {erroSaida && (
             <p className="mt-3 rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
               {erroSaida}
@@ -186,7 +192,7 @@ function Painel() {
           {isPending ? (
             <p className="mt-4 text-sm text-muted-foreground">Carregando…</p>
           ) : (
-            <div className="mt-4 max-h-[26rem] overflow-auto rounded-md border border-border" role="region" aria-label="Registros do Dia" tabIndex={0}>
+            <div className="mt-4 max-h-[26rem] overflow-auto rounded-md border border-border" role="region" aria-label={dia ? "Registros do Dia" : "Todos os Registros"} tabIndex={0}>
             <table className="tabela-densa w-full min-w-[1080px] table-fixed text-left text-sm [overflow-wrap:normal]">
               <thead className="sticky top-0 bg-surface text-xs uppercase text-muted-foreground">
                 <tr>
@@ -227,7 +233,7 @@ function Painel() {
                   </tr>
                   );
                 })}
-                {doDia.length === 0 && <tr><td colSpan={8} className="text-muted-foreground">Nenhum registro neste dia.</td></tr>}
+                {doDia.length === 0 && <tr><td colSpan={8} className="text-muted-foreground">{dia ? "Nenhum registro neste dia." : "Nenhum registro lançado ainda."}</td></tr>}
               </tbody>
             </table>
             </div>
