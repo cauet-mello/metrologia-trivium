@@ -5,3 +5,4 @@
 - [x] Validar confirmação, cancelamento, fechamento e telas em computador/celular.
 - [ ] Concluir células sem número (nome opcional no cadastro) — verificar pendências do agente de vínculos.
 - [x] Adicionar modo claro/escuro (escuro como padrão atual).
+- [x] Manter todos os registros sempre visíveis (painel abre com todos os dias; histórico sem limite de linhas).

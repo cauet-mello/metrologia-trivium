@@ -3,6 +3,10 @@ import { useSession } from "@tanstack/react-start/server";
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 
+import type { Database } from "@/integrations/supabase/types";
+
+type Evento = Database["public"]["Tables"]["alteracoes"]["Row"];
+
 type InspetorSession = { inspetorId?: string; nome?: string };
 
 function sessionConfig() {
@@ -151,12 +155,20 @@ export const alterarSaida = createServerFn({ method: "POST" })
 export const listarAlteracoes = createServerFn({ method: "GET" }).handler(async () => {
   await exigirInspetor();
   const db = await admin();
-  const { data, error } = await db
-    .from("alteracoes")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(300);
-  if (error) throw new Error(error.message);
+  // Traz todo o histórico de alterações (o servidor limita 1000 linhas por pedido).
+  const eventos: Evento[] = [];
+  for (let de = 0; ; de += 1000) {
+    const { data, error } = await db
+      .from("alteracoes")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(de, de + 999);
+    if (error) throw new Error(error.message);
+    eventos.push(...(data as Evento[]));
+    if (data.length < 1000) break;
+  }
+  const data = eventos;
   // Recover legacy UUID-only references from safe snapshots, without changing audit rows.
   const nomes = new Map<string, string>();
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
