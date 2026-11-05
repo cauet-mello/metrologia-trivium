@@ -80,13 +80,20 @@ export const abertosQuery = {
 export const historicoQuery = {
   queryKey: ["registros", "historico"],
   queryFn: async (): Promise<Registro[]> => {
-    const { data, error } = await supabase
-      .from("registros")
-      .select("*")
-      .order("hora_entrada", { ascending: false })
-      .limit(1000);
-    if (error) throw error;
-    return data as Registro[];
+    // Busca em páginas de 1000 para trazer todo o histórico (o servidor limita 1000 por pedido).
+    const todos: Registro[] = [];
+    for (let de = 0; ; de += 1000) {
+      const { data, error } = await supabase
+        .from("registros")
+        .select("*")
+        .order("hora_entrada", { ascending: false })
+        .order("id", { ascending: false })
+        .range(de, de + 999);
+      if (error) throw error;
+      todos.push(...(data as Registro[]));
+      if (data.length < 1000) break;
+    }
+    return todos;
   },
 };
 
