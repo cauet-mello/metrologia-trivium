@@ -214,7 +214,7 @@ function Painel() {
                     <td className="truncate" title={r.modelo}>{r.modelo}</td>
                     <td className="truncate" title={cel}>{cel}</td>
                     <td className="truncate" title={r.operador}>{r.operador}</td>
-                    <td className="whitespace-nowrap">{r.operacao}</td>
+                    <td className="break-words leading-snug">{r.operacao}</td>
                     <td className="whitespace-nowrap tabular-nums">
                       {formatarData(r.hora_entrada)}{" "}
                       <span className="text-xs text-muted-foreground">{formatarHora(r.hora_entrada)}</span>
